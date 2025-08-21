@@ -19,7 +19,7 @@
 
 ## 📖 Documentation
 <details>
-  <summary>📖 Everything About Module</summary>
+  <summary>📖 Everything About Module (click here to view) </summary>
 
   ## Scan Modes
   This tool can search for `.zip` modules in two ways (both are quick):
