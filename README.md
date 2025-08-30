@@ -86,7 +86,7 @@ RSTDATA # It will run automatically by main script btw.
 DEKH "✅ All configs restored."
 ```
 **2. Post-Install Safety Check**
-```
+```sh
 #!/system/bin/sh
 # Verify if all important modules installed
 
