@@ -347,19 +347,20 @@ GITDOWN() {
 
 # Restore Modules Data if any
 RSTDATA() {
-DEKH "💾 Restoring Modules Data" 1 "h"
-for i in "${!MOD_ID_PKG[@]}"; do
-  id="${MOD_ID_PKG[$i]}"
-  if PKG_INSTALLED "$id" || [ -d "$MODDIR/$id" ]; then
-    DEKH "${MOD_DATA[$i]}" | while IFS= read -r file; do
-      fname="$(basename "$file")"
-      src="$MODDATA/$fname"
-      [ -f "$src" ] || continue
-      DEKH "🔁 Restoring $id → $fname"
-      RST "$src" "$file"
-    done
-  fi
-done
+  DEKH "💾 Restoring Modules Data" 1 "h"
+  for i in "${!MOD_ID_PKG[@]}"; do
+    id="${MOD_ID_PKG[$i]}"
+    name=$(PADH name "$MODDIR/$id/module.prop" 2>/dev/null) || name=${name:-$id}
+    if PKG_INSTALLED "$id" || [ -d "$MODDIR/$id" ]; then
+      DEKH "${MOD_DATA[$i]}" | while IFS= read -r file; do
+        fname="$(basename "$file")"
+        src="$MODDATA/$id/$fname"
+        [ -f "$src" ] || continue
+        DEKH "🔁 Restoring: $name\n💿 Data: $fname"
+        RST "$src" "$file"
+      done
+    fi
+  done
 }
 
 # Check which Rooting Implementation is running
