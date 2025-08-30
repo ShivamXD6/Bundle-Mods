@@ -36,10 +36,6 @@ SKIPPED=""
 MCNT=1
 APPCNT=1
 chmod +x "$MODPATH/zip" "$MODPATH/zip32" "$MODPATH/aapt" "$MODPATH/aapt32"
-WAL=""
-for lspd in /data/adb/lspd*/*/modules_config.db-wal; do
-    [ -f "$lspd" ] && WAL="$lspd" && break
-done
 
 # Write Hashes
 cat > "$Hashes" << 'HASHED'
