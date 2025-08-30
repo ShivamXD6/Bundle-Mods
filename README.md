@@ -1,5 +1,5 @@
 # 🗃️ Bundle-Mods
-> A tool that lets you bundle or pack all your .zip modules into one neat pack, including installed modules, set a custom name and author, and much more, perfect for carrying your favorite modules without carrying multiple zips.
+> A simple tool that lets you bundle all your magisk or lsposed modules or even your apps into one neat pack, set a custom name and author, and much more, perfect for carrying your favorite modules without carrying multiple files.
 
 ![Downloads](https://img.shields.io/github/downloads/ShivamXD6/Bundle-Mods/total?color=green&style=for-the-badge)
 ![Release](https://img.shields.io/github/v/release/ShivamXD6/Bundle-Mods?style=for-the-badge)
