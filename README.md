@@ -40,8 +40,9 @@
   **Pre-Install.sh** → Runs before installing modules
   **Post-Install.sh** → Runs after installing modules
   ### Below are some examples 👇
-  🔹 Pre-Install Script Examples
-  1. Skip/Remove Certain Modules Before Install
+  ### 🔹 Pre-Install Script Examples:
+  
+  **1. Skip/Remove Certain Modules Before Install**
   ```sh
   #!/system/bin/sh
   # Example Pre-Install script
