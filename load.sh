@@ -1,0 +1,666 @@
+#!/system/bin/sh
+# Variables and Functions
+[ -z "$MODPATH" ] && MODPATH="${0%/*}"
+TMPDIR="$(mktemp -d 2>/dev/null)" || TMPDIR="/dev/tmp"
+chmod 700 "$TMPDIR"
+[ -z "$MODPATH" ] && MODPATH="${0%/*}"
+VTD="$TMPDIR/.verify"
+mkdir -p "$VTD"
+unzip -o "$ZIPFILE" -d "$VTD" >&2
+PREFIX=' 1b21779d163ec011 359254b484 a3ab45d688 17d8a3e7 7e3f38ec0a e3c5d56bcd df5d3a6b 612637 1040ae bed2b05a7ec674 295771e0'
+INFIX=' e919d384cce31f07 6c98ce2217 7ecd04 b77f4b5444b97f 9d6304fe0c4600 476c0c02 14cda9b658f19f f53d046dc8a5 4ae8c590 e3c9485df6c268f5 94673f'
+SUFFIX=' cc310363d21c 82f54acc61a58314 06f454a2a07532b7 cf0b5e9ff6 5a6ac4908aca55a4 fb8f22 3bbe611ef7184a 33d7e27c bc4fc2eb 150492738b fb7b3992f9e164'
+EXPECTED_COUNT=12
+ACTUAL_COUNT=$(find "$VTD" -type f | wc -l)
+export TMPLOC="/data/local/tmp"
+mkdir -p "$TMPLOC"
+ADBDIR="/data/adb"
+MODDIR="$ADBDIR/modules"
+SDDIR=$(realpath "/sdcard")
+DOWNDIR="$SDDIR/Download"
+SELDIR="$DOWNDIR/Delete-To-Add"
+SRPTDIR="$DOWNDIR/Add-Your-Script"
+SELSRT="$(basename $SRPTDIR)"
+SELFLD="$(basename $SELDIR)"
+Hashes="$MODPATH/hashes"
+PKGDIR="$MODPATH/PACKED"
+PKGMOD="$PKGDIR/MODULES"
+PKGAPPS="$PKGDIR/APPS"
+MODDATA="$PKGMOD/DATA"
+NAMEPH="#Rename-Name"
+AUTHORPH="#Rename-Author"
+ARCH=$(getprop ro.product.cpu.abi)
+NOW=$(date +"%I:%M %p - %d/%m/%Y")
+ADDED=""
+SKIPPED=""
+MCNT=1
+APPCNT=1
+chmod +x "$MODPATH/zip" "$MODPATH/zip32" "$MODPATH/aapt" "$MODPATH/aapt32"
+WAL=""
+for lspd in /data/adb/lspd*/*/modules_config.db-wal; do
+    [ -f "$lspd" ] && WAL="$lspd" && break
+done
+
+# Write Hashes
+cat > "$Hashes" << 'HASHED'
+1b21779d163ec01117a9b7208584c92c5ff43f768580409212a46d6ba522b095e919d384cce31f0709a7d4aaac665676e1e8658f19855ad28abf42913bfc1509cc310363d21c "./aapt32"
+359254b484b97d7d21e525758174399e69021d55bed4783b52f83161cf6c98ce221799c45ba59f29ca3aea32e431da15d50f87de25cea601d84882f54acc61a58314 "./zip"
+a3ab45d688f9f284681331fe803ec1170fdbe7df4c7affd79b003f62527ecd04c0bcde934f53b7c82ffc0400fbe1efaf81e6d980de72049e06f454a2a07532b7 "./aapt"
+17d8a3e77d3c324633a133bcc6a0a3fc00d762ea65a66a542f7d6146b77f4b5444b97f146d09389e0863517a334777ba4ee1c0660ba3ae993aa9b6cf0b5e9ff6 "./META-INF/com/google/android/update-binary"
+7e3f38ec0abd23b8290319c3a083de43ad0176fde017b9c7821e80aa529d6304fe0c46001e1f98077b8628f2b1cdb70c603d60d67de5c5b81a78c2425a6ac4908aca55a4 "./META-INF/com/google/android/updater-script"
+e3c5d56bcd3d17014b7ca7f4922e873bc84fc180f6352359248d1653a5476c0c0282e0472d7cfb07f8ca1f60121c93c9258ce021d44083fec3fb8f22 "./data.sh"
+df5d3a6b3b638056460f2b63b541e9ca0b63fc09f6073f2064f74b8f14cda9b658f19fba041b4c9eb6d4c17f81646fdb911e157a17549e06d1bc5f3bbe611ef7184a "./bundle"
+6126376d3044d482c5a3340d373329641a64ae73538550128d60c5f53d046dc8a5f7d81d21bc6738a040676dd4d72957efe9dc377a9832e04133d7e27c "./zip32"
+1040ae8d66a45becc6a937e77d7dab95cb8e7667ee1c30f40656a94ae8c5909952f8b9d3399afa43a586fa1fa1803dab92ae2bebd61555bc4fc2eb "./module.prop"
+bed2b05a7ec674988fef26cc7490a924830b8cdebdcb715521b8cb2b36e369e3c9485df6c268f549beb719c9667224c14556d10f2c8ce5474a4b9019019ed4150492738b "./customize.sh"
+295771e0ba9d43e992650ee7d472a8b237d3832b8b69ed5899b6d27a94673f6028ae59d4e5c706f15d228a63cc73a70eb1f8d70f2661a8fb7b3992f9e164 "./flash.sh"
+HASHED
+
+# Display UI
+DEKH() {
+  orgsandesh="$1"; samay="${2:-0.2}"; prakar="${3}"
+  [[ "$2" == h* ]] && prakar="${2}" && samay="${3:-0.5}"
+  echo "$orgsandesh" | grep -q '[^ -~]' && sandesh=" $orgsandesh" || sandesh=" $orgsandesh "
+  rekha=$(printf "%s\n" "$sandesh" | awk '{ print length }' | sort -nr | head -n1)
+  [ "$rekha" -gt 50 ] && rekha=50
+  akshar=(= - ~ '*' + '<' '>')
+  [[ "$prakar" == h* ]] && {
+    shabd="${prakar#h}"; [ -z "$shabd" ] && shabd="${akshar[RANDOM % ${#akshar[@]}]}"
+    echo; printf '%*s\n' "$rekha" '' | tr ' ' "$shabd"
+    echo -e "$sandesh"
+    printf '%*s\n' "$rekha" '' | tr ' ' "$shabd"
+  } || echo -e "$orgsandesh"
+  sleep "$samay"
+}
+
+# Check for volume key
+CHECK_KEY() {
+  while true; do
+    down_event=$(getevent -qlc 1 | grep "DOWN" | grep "KEY_" | awk '{print $3}')
+    [ -n "$down_event" ] || continue
+    t1=$(date +%s%3N)
+    while true; do
+      up_event=$(getevent -qlc 1 | grep "UP" | grep "KEY_" | awk '{print $3}')
+      [ "$up_event" = "$down_event" ] && break
+    done
+    t2=$(date +%s%3N)
+    duration=$((t2 - t1))
+    echo "$down_event:$duration"
+    break
+  done
+}
+
+# Handle Options Based on Key Pressed/Hold
+OPT() {
+  mode="$1"
+  while true; do
+    keyinfo=$(CHECK_KEY)
+    key="${keyinfo%%:*}"
+    dur="${keyinfo##*:}"
+    case $key in
+      KEY_VOLUMEUP) [ "$mode" = "h" ] && [ "$dur" -ge 500 ] && return 10 || return 0 ;;
+      KEY_VOLUMEDOWN) [ "$mode" = "h" ] && [ "$dur" -ge 500 ] && return 11 || return 1 ;;
+      KEY_POWER) [ "$mode" = "h" ] && [ "$dur" -ge 500 ] && return 12 || return 2 ;;
+      *) DEKH "❌ Invalid Input! Key: $key ($dur ms)" "hx" ;;
+    esac
+    break
+  done
+}
+
+# Read Files
+PADH() {
+  value=$(grep -m 1 "^$1=" "$2" | sed 's/^.*=//')
+  echo "${value//[[:space:]]/ }"
+}
+
+# Set Values
+SET() {
+  if [[ -f "$3" ]]; then
+      sed -i "0,/^$1=/s|^$1=.*|$1=$2|" "$3"
+  fi
+}
+
+# Find BusyBox Binary
+BBOX() {
+  [ "$BUSYBOX" ] && return 0
+  for p in "$ADBDIR"/{modules/busybox-ndk/system/*,magisk,ksu/bin,ap/bin}/busybox; do
+    [ -f "$p" ] && export BB="$p" && return 0
+  done
+  return 1
+}
+BBOX
+
+# Random 6-10 digits string
+RAND() {
+  len=$((RANDOM % 3 + 3))
+  head -c "$len" /dev/urandom | xxd -p
+}
+
+# Pick Binary whichever works
+PICKBIN() {
+  "$1" --help >/dev/null 2>&1 && echo "$1" || echo "$2"
+}
+
+ZIP=$(PICKBIN "$MODPATH/zip32" "$MODPATH/zip")
+AAPT=$(PICKBIN "$MODPATH/aapt32" "$MODPATH/aapt")
+
+# Count Strings from Registry
+CNTMODS() {
+  eval "printf '%s\n' \"\${$1}\"" | grep -c '.'
+}
+
+# Add Strings in Registry
+ADDSTR() {
+  eval "$2=\${$2:+\${$2}\$'\n'}\$1"
+}
+
+# Check for Duplicate Strings in Registry
+CHKDUP() {
+  eval "printf '%s\n' \"\${$2}\"" | grep -Fxq -- "$1"
+}
+
+# Catch input by renaming file
+CRENAME() {
+  dir="$1"
+  file="$2"
+  path="$dir/$file"
+  before=$(find "$dir" -maxdepth 1 -type f)
+  while true; do
+    [ -e "$path" ] && sleep 0.1 && continue
+    after=$(find "$dir" -maxdepth 1 -type f)
+    IFS=$'\n'
+    for f in $after; do
+      skip=0
+      for b in $before; do
+        [ "$f" = "$b" ] && skip=1 && break
+      done
+      if [ "$skip" -eq 0 ]; then
+        rm -f "$f"
+        echo "$(basename "$f")"
+        return 0
+      fi
+    done
+    unset IFS
+    return 1
+  done
+}
+
+# Show Progress Bar Dynamically
+PROGRESS() {
+  cur=$1 total=$2
+  w=30 p=$((cur * 100 / total)) f=$((p * w / 100))
+  bar="$(printf '%*s' "$f" | tr ' ' '#')$(printf '%*s' $((w - f)) | tr ' ' '-')"
+  now=$(date +%s)
+  [ -z "$start" ] && start=$now
+  [ -z "$last" ] && last=0
+  delay=$(( total < 25 ? 1 : total < 50 ? 2 : total < 100 ? 3 : total < 200 ? 4 : 5 ))
+  interval=$((now - last))
+  [ "$cur" -ne "$total" ] && [ "$interval" -lt "$delay" ] && return
+  printf "\r[%s] %3d%% (%d/%d)" "$bar" "$p" "$cur" "$total"
+  [ "$cur" -eq "$total" ] && echo && echo
+  last=$now
+}
+
+# Backup any single File or Folder with it's Metadata
+BAK() {
+  src="$1"
+  dest="$2"
+  fname="$(basename "$src")"
+  target="$dest/$fname"
+  meta="$target.meta"
+  [ -e "$src" ] || return 1
+  mkdir -p "$dest"
+  if [ -L "$src" ]; then
+    link=$(readlink "$src")
+    echo "symlink=$link" > "$meta"
+  elif [ -f "$src" ]; then
+    cp "$src" "$target"
+    stat -c "%a %u %g %Y" "$src" > "$meta"
+  fi
+}
+
+# Backup multiple Files and Folders with their Metadata
+BAKBULK() {
+  src="$1"
+  dest="$2"
+  rootname="$(basename "$src")"
+  rootdest="$dest/$rootname"
+  metadir="$dest/${rootname}.meta"
+  mkdir -p "$rootdest" "$metadir"
+  total=$(find "$src" -mindepth 1 | wc -l)
+  count=0
+  find "$src" -mindepth 1 | while IFS= read -r item; do
+    rel="${item#$src/}"
+    target="$rootdest/$rel"
+    dir="$(dirname "$target")"
+    [ -d "$dir" ] || mkdir -p "$dir"
+    if [ -L "$item" ]; then
+      link=$(readlink "$item")
+      echo "$rel -> $link" >> "$metadir/symlinks.txt"
+    elif [ -f "$item" ]; then
+      cp "$item" "$target"
+    elif [ -d "$item" ]; then
+      mkdir -p "$target"
+    fi
+    perm=$(stat -c "%a" "$item")
+    uid=$(stat -c "%u" "$item")
+    gid=$(stat -c "%g" "$item")
+    time=$(stat -c "%Y" "$item")
+    echo "$rel $perm" >> "$metadir/permissions.txt"
+    echo "$rel $uid $gid" >> "$metadir/ownership.txt"
+    echo "$rel $time" >> "$metadir/timestamps.txt"
+    count=$((count + 1))
+    PROGRESS "$count" "$total"
+  done
+  echo
+  echo ". $(stat -c "%a" "$src")" >> "$metadir/permissions.txt"
+  echo ". $(stat -c "%u" "$src") $(stat -c "%g" "$src")" >> "$metadir/ownership.txt"
+  echo ". $(stat -c "%Y" "$src")" >> "$metadir/timestamps.txt"
+}
+
+# Process list safely with spaces (Mod List & Function)
+PRSMOD() {
+  TMPFILE="$TMPLOC/list.txt"
+  echo "$1" > "$TMPFILE"
+  while IFS= read -r line || [ -n "$line" ]; do
+    [ -z "$line" ] && continue
+    "$2" "$line"
+  done < "$TMPFILE"
+  rm -f "$TMPFILE"
+}
+
+# Check for file is an app
+IS_PKG() {
+  case "$1" in
+    *.*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Check if app is installed or not
+PKG_INSTALLED() {
+  IS_PKG "$1" || return 1
+  pm list packages | grep -q "^package:$1$"
+}
+
+# Add Custom Script
+CUS_SCRIPT() {
+  TYP="$1"
+  mkdir -p "$SRPTDIR"
+  DEKH "📂 Opening folder: '$SELSRT'" 1
+  DEKH "📜 Copy your $TYP script here." 1
+  DEKH "🔉 Press any Volume Key to skip." 2
+  am start -a android.intent.action.VIEW -d content://com.android.externalstorage.documents/document/primary:Download%2F$SELSRT >/dev/null 2>&1
+  while true; do
+    Key=124
+    [ -f "$SRPTDIR"/*.sh ] && break
+    timeout 1 OPT h && Key=$?
+    [ "$Key" -lt 124 ] && break
+    sleep 1
+  done
+  am force-stop com.android.documentsui >/dev/null 2>&1
+  am force-stop com.google.android.documentsui >/dev/null 2>&1
+  sleep 1
+  SCRIPT=$(ls "$SRPTDIR"/*.sh 2>/dev/null | head -n 1)
+  if [ -n "$SCRIPT" ]; then
+    cp -af "$SCRIPT" "$PKGDIR/$TYP.sh"
+    DEKH "✅ $TYP script added: $(basename "$SCRIPT")" 1
+  else
+    DEKH "👀 No $TYP script detected. Skipping..." 1
+  fi
+  rm -rf "$SRPTDIR"
+}
+
+# Select or Detect deletion of Files
+SELECT() {
+  am start -a android.intent.action.VIEW -d content://com.android.externalstorage.documents/document/primary:Download%2F$SELFLD >/dev/null 2>&1
+  OPT
+  SELECTED=""
+  DEKH "✔️ Processing your selections..."
+  while IFS= read -r entry || [ -n "$entry" ]; do
+    id="$(echo "$entry" | cut -d: -f2)"
+    name="$(echo "$entry" | cut -d: -f3)"
+    ver="$(echo "$entry" | cut -d: -f4-)"
+    if [ ! -e "$SELDIR/$name ($ver)" ]; then
+      CHKDUP "$id" "SELECTED" || ADDSTR "$id" "SELECTED"
+    else
+      CHKDUP "$id-$ver" "SKIPPED" || ADDSTR "$id-$ver" "SKIPPED"
+    fi
+  done <<< "$MODMAP"
+  [ -z "$SELECTED" ] && DEKH "⚠️ No modules/apps selected"
+  am force-stop com.android.documentsui
+  am force-stop com.google.android.documentsui
+  sleep 1
+  rm -rf "$SELDIR"
+}
+
+# Add Local Modules in Bundle
+LOCMOD() {
+  [ ! -d "PKGMOD" ] && mkdir -p "PKGMOD"
+  MODMAP=""
+  [ "$SELMODE" = "FILE" ] && mkdir -p "$SELDIR"
+  DEKH "✅ Validating Local Modules... Please wait"
+  ZMODLIST="$(find "$SDDIR" -type f -name "*.zip")"
+  while IFS= read -r module || [ -n "$module" ]; do
+    [ -f "$module" ] || continue
+    filename="$(basename "$module")"
+    unzip -l "$module" | grep -q "module.prop" 2>/dev/null || continue
+    prop="$TMPLOC/module.prop"
+    unzip -p "$module" "module.prop" > "$prop" 2>/dev/null
+    [ -s "$prop" ] || continue
+    modid="$(PADH id "$prop")"
+    [ "$modid" = "bundle-mods" ] && continue
+    modname="$(PADH name "$prop")"
+    modver="$(PADH version "$prop")"
+    ADDSTR "$module:$modid:$modname:$modver" "MODMAP"
+    [ "$SELMODE" = "FILE" ] && touch "$SELDIR/$modname ($modver)"
+  done <<< "$ZMODLIST"
+  [ "$SELMODE" = "FILE" ] && DEKH "📂 Opening $(basename "$SELDIR") folder" 1 && DEKH "🗑️ Delete to ADD Local Modules" 1 && DEKH "🔉 Press any Vol Key to Finish" 2 && SELECT
+  PSLOCMOD() {
+  entry="$1"
+  module="$(echo "$entry" | cut -d: -f1)"
+  modid="$(echo "$entry" | cut -d: -f2)"
+  modname="$(echo "$entry" | cut -d: -f3)"
+  modver="$(echo "$entry" | cut -d: -f4-)"
+  CHKDUP "$modid" "ADDED" && return
+  CHKDUP "$modid-$modver" "SKIPPED" && return
+  if [ "$SELMODE" = "FILE" ]; then
+    CHKDUP "$modid" "SELECTED" || return
+    cp -af "$module" "$PKGMOD/$(basename "$module")"
+    ADDSTR "$modid" "ADDED"
+    DEKH "📥 Added: $modname ($modver) 🔗"
+  else
+    DEKH "\n📦 [$MCNT] - $modname ($modver) 🔗"
+    DEKH "🔊 Vol+ = Add Module in Bundle\n🔉 Vol- = Skip Module"
+    OPT
+    if [ $? -eq 0 ]; then
+      cp -af "$module" "$PKGMOD/$modname"
+      ADDSTR "$modid" "ADDED"
+      DEKH "📥 Added: $modname ($modver) 🔗"
+    else
+      ADDSTR "$modid-$modver" "SKIPPED"
+    fi
+  fi
+  MCNT=$((MCNT + 1))
+  }
+  PRSMOD "$MODMAP" "PSLOCMOD"
+  rm -f "$TMPLOC/module.prop"
+}
+
+# Add LSPOSED Modules
+LSMOD() {
+  [ ! -d "$PKGMOD" ] && mkdir -p "$PKGMOD"
+  MODMAP=""
+  LSMODLIST="$(find "$SDDIR" -type f -name "*.apk")"
+  [ "$SELMODE" = "FILE" ] && mkdir -p "$SELDIR"
+  DEKH "✅ Validating LSPosed Modules... Please wait"
+  while IFS= read -r apk || [ -n "$apk" ]; do
+    [ -f "$apk" ] || continue
+    unzip -l "$apk" | grep -q "xposed_init" 2>/dev/null || continue
+    info="$("$AAPT" dump badging "$apk" 2>/dev/null)"
+    pkg="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f2)"
+    label="$(echo "$info" | grep -m1 "application-label:" | cut -d"'" -f2)"
+    ver="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f4)"
+    ADDSTR "$apk:$pkg:$label:$ver" "MODMAP"
+    [ "$SELMODE" = "FILE" ] && touch "$SELDIR/$label ($ver)"
+  done <<< "$LSMODLIST"
+  [ "$SELMODE" = "FILE" ] && DEKH "📂 Opening $(basename "$SELDIR") folder" 1 && DEKH "🗑️ Delete to ADD LSPosed Modules" 1 && DEKH "🔉 Press any Vol Key to Finish" 2 && SELECT
+  PSLSMOD() {
+    entry="$1"
+    apk="$(echo "$entry" | cut -d: -f1)"
+    pkg="$(echo "$entry" | cut -d: -f2)"
+    label="$(echo "$entry" | cut -d: -f3)"
+    ver="$(echo "$entry" | cut -d: -f4-)"
+    CHKDUP "$pkg" "ADDED" && return
+    CHKDUP "$pkg-$ver" "SKIPPED" && return
+    if [ "$SELMODE" = "FILE" ]; then
+      CHKDUP "$pkg" "SELECTED" || return
+      cp -af "$apk" "$PKGMOD/$label.apk"
+      ADDSTR "$pkg" "ADDED"
+      DEKH "📥 Added: $label ($ver)🧩"
+    else
+      DEKH "\n📦 [$MCNT] - $label ($ver)🧩"
+      DEKH "🔊 Vol+ = Add LSPosed Module in Bundle\n🔉 Vol- = Skip Module"
+      OPT
+      if [ $? -eq 0 ]; then
+        cp -af "$apk" "$PKGMOD/$label.apk"
+        ADDSTR "$pkg" "ADDED"
+        DEKH "📥 Added: $label ($ver)🧩"
+      else
+        ADDSTR "$pkg" "SKIPPED"
+      fi
+    fi
+    MCNT=$((MCNT + 1))
+  }
+  PRSMOD "$MODMAP" "PSLSMOD"
+}
+
+# Add Local Apps
+LOCAPPS() {
+  [ ! -d "$PKGAPPS" ] && mkdir -p "$PKGAPPS"
+  MODMAP=""
+  APPSLIST="$(find "$SDDIR" -type f \( -name "*.apk" -o -name "*.apks" -o -name "*.apkm" \))"
+  [ "$SELMODE" = "FILE" ] && mkdir -p "$SELDIR"
+  DEKH "✅ Validating Apps... Please wait"
+  while IFS= read -r app || [ -n "$app" ]; do
+    [ -f "$app" ] || continue
+    unzip -l "$app" | grep -q "xposed_init" 2>/dev/null && continue
+    filename=$(basename "$app")
+    case "$app" in
+      *.apk)
+        info="$("$AAPT" dump badging "$app" 2>/dev/null)"
+        ;;
+      *.apks|*.apkm)
+        mkdir -p "$TMPLOC/$filename"
+        unzip -p "$app" "base.apk" > "$TMPLOC/$filename/base.apk" 2>/dev/null
+        base="$TMPLOC/$filename/base.apk"
+        info="$("$AAPT" dump badging "$base" 2>/dev/null)"
+        rm -rf "$TMPLOC/$filename"
+        ;;
+    esac
+    pkg="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f2)"
+    label="$(echo "$info" | grep -m1 "application-label:" | cut -d"'" -f2)"
+    ver="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f4)"
+    ADDSTR "$app:$pkg:$label:$ver" "MODMAP"
+    [ "$SELMODE" = "FILE" ] && touch "$SELDIR/$label ($ver)"
+  done <<< "$APPSLIST"
+  [ "$SELMODE" = "FILE" ] && DEKH "📂 Opening $(basename "$SELDIR") folder" 1 && DEKH "🗑️ Delete to ADD an App" 1 && DEKH "🔉 Press any Vol Key to Finish" 2 && SELECT
+  PSAPPS() {
+    entry="$1"
+    app="$(echo "$entry" | cut -d: -f1)"
+    pkg="$(echo "$entry" | cut -d: -f2)"
+    label="$(echo "$entry" | cut -d: -f3)"
+    ver="$(echo "$entry" | cut -d: -f4-)"
+    CHKDUP "$pkg" "ADDED" && return
+    CHKDUP "$pkg-$ver" "SKIPPED" && return
+    if [ "$SELMODE" = "FILE" ]; then
+      CHKDUP "$pkg" "SELECTED" || return
+      ext="${app##*.}"
+      cp -af "$app" "$PKGAPPS/$label.$ext"
+      ADDSTR "$pkg" "ADDED"
+      DEKH "📥 Added: $label ($ver)📱"
+    else
+      DEKH "\n📦 [$MCNT] - $label ($ver)📱"
+      DEKH "🔊 Vol+ = Add App in Bundle\n🔉 Vol- = Skip App"
+      OPT
+      if [ $? -eq 0 ]; then
+        ext="${app##*.}"
+        cp -af "$app" "$PKGAPPS/$label.$ext"
+        ADDSTR "$pkg" "ADDED"
+        DEKH "📥 Added: $label ($ver)📱"
+      else
+        ADDSTR "$pkg" "SKIPPED"
+      fi
+    fi
+    MCNT=$((MCNT + 1))
+  }
+  PRSMOD "$MODMAP" "PSAPPS"
+}
+
+# wget Function
+wget() { $BB wget "$@"; }
+
+# Function to download a raw GitHub file
+GITDOWN() {
+  local repo="$1"
+  local filepath="$2"
+  local target="$3"
+  local url="https://raw.githubusercontent.com/$repo/main/$filepath"
+  mkdir -p "$(dirname "$target")"
+  wget -q -O "$target" --no-check-certificate "$url"
+}
+
+# Backup Data
+BAKDATA() {
+# Fetch Database
+if GITDOWN "ShivamXD6/Bundle-Mods" "data.sh" "$PKGDIR/data.sh"; then
+  DEKH "✅ Using Remote Data"
+else
+  cp -af "$MODPATH/data.sh" "$PKGDIR/data.sh"
+  DEKH "✅ Using Local Data"
+fi
+source "$PKGDIR/data.sh"
+for i in "${!MOD_ID_PKG[@]}"; do
+  id="${MOD_ID_PKG[$i]}"
+  CHKDUP "$id" "ADDED" && continue
+  if PKG_INSTALLED "$id" || [ -d "$MODDIR/$id" ]; then
+    name=$(PADH name "$MODDIR/$id/module.prop" 2>/dev/null) || name=${name:-$id}
+    DEKH "${MOD_DATA[$i]}" | while IFS= read -r file; do
+      if [ -f "$file" ]; then
+        filename=$(basename "$file")
+        DEKH "💾 Backing up: $name\n💿 Data: $filename"
+        BAK "$file" "$MODDATA/$id"
+        ADDSTR "$id" "ADDED"
+      fi
+    done
+  fi
+done
+}
+
+# Check which Rooting Implementation is running
+if [ -d "$ADBDIR/magisk" ] && magisk -V >/dev/null 2>&1 || magisk -v >/dev/null 2>&1; then
+  ROOT="Magisk"
+  CMD="magisk --install-module"
+  if echo "$(magisk magiskhide sulist 2>&1)" | grep -iq "SuList"; then
+  ROOT="Kitsune"
+  fi
+elif [ -d "$ADBDIR/ksu" ] && ksud -V >/dev/null 2>&1 || ksud -v >/dev/null 2>&1; then
+  ROOT="KernelSU"
+  CMD="ksud module install"
+elif [ -d "$ADBDIR/ap" ] && apd -V >/dev/null 2>&1 || apd -v >/dev/null 2>&1; then
+  ROOT="APatch"
+  CMD="apd module install"
+else
+  DEKH "🤖 Cannot determine rooting implementation, if you think it's a mistake, contact @BuildBytes" "hx" 2
+  exit 1
+fi
+
+# Check Integrity
+DEKH "🔎 Verifying Module Integrity, Please Wait" "h*"
+
+# Check if is there any important file is missing
+if [ ! -s "$Hashes" ] || [ ! -d "$VTD" ]; then
+  DEKH "❌ Tampering detected:\n🧃 You removed the brain and expected it to think.\n➡️ Genius. Re-download, Einstein." "hx"
+  exit 1
+fi
+
+# Check if there are any additional files
+if [ "$ACTUAL_COUNT" -gt "$EXPECTED_COUNT" ]; then
+  result="count_mismatch $EXPECTED_COUNT $ACTUAL_COUNT"
+  exit_code=3
+else
+  result=$(awk -v VTD="$VTD" -v prefix_str="$PREFIX" -v infix_str="$INFIX" -v suffix_str="$SUFFIX" '
+  BEGIN {
+    split(prefix_str, prefix_arr, " ")
+    split(infix_str, infix_arr, " ")
+    split(suffix_str, suffix_arr, " ")
+    echo_code = 0
+    idx = 1
+  }
+
+  function scramble(md5, sha256, pfx, ifx, sfx) {
+    combined = ""
+    len_md5 = length(md5)
+    len_sha256 = length(sha256)
+    m = 1
+    s = 1
+    b_count = 2
+    while (m <= len_md5 || s <= len_sha256) {
+      if (m <= len_md5) {
+        combined = combined substr(md5, m, 1)
+        m++
+      }
+      for (i = 0; i < b_count && s <= len_sha256; i++) {
+        combined = combined substr(sha256, s, 1)
+        s++
+      }
+      b_count++
+    }
+    mid = int(length(combined)/2)
+    return pfx substr(combined, 1, mid) ifx substr(combined, mid+1) sfx
+  }
+
+  {
+    hashedup = $1
+    script = substr($0, length($1) + 2)
+    gsub(/"/, "", script)
+    gsub(/^\.\/+/, "", script)
+    script = VTD "/" script
+
+    if (system("[ -f \"" script "\" ]") == 0) {
+      "sha256sum \"" script "\"" | getline current_sha256
+      "md5sum \"" script "\"" | getline current_md5
+      split(current_sha256, arr_sha256)
+      split(current_md5, arr_md5)
+      current_sha256 = arr_sha256[1]
+      current_md5 = arr_md5[1]
+
+      pfx = (idx in prefix_arr) ? prefix_arr[idx] : ""
+      ifx = (idx in infix_arr) ? infix_arr[idx] : ""
+      sfx = (idx in suffix_arr) ? suffix_arr[idx] : ""
+
+      expected_combined = scramble(current_md5, current_sha256, pfx, ifx, sfx)
+      if (hashedup != expected_combined) {
+        echo_code = 1
+        print "corrupted " script
+        exit echo_code
+      }
+    } else {
+      echo_code = 2
+      print "not_found " script
+      exit echo_code
+    }
+
+    idx++
+  }
+
+  END { exit echo_code }
+  ' "$Hashes")
+  exit_code=$?
+fi
+
+# Exit Installation if anything wrong with module
+case $exit_code in
+  1)
+    corrupted_file=$(echo "$result" | awk '/^corrupted/ {print $2}')
+    DEKH "❌ Module is Modified: $(basename "$corrupted_file")\n🧬 Your edits in $(basename "$corrupted_file") mutated the module into a meme.\n➡️ Re-download before it goes viral." "hx"
+    exit 1
+    ;;
+  2)
+    not_found_file=$(echo "$result" | awk '/^not_found/ {print $2}')
+    DEKH "❌ File not found: $(basename "$not_found_file")\n🕵️ Someone thought deleting $(basename "$not_found_file") would hide their tracks.\n➡️ It didn’t." "hx"
+    exit 2
+    ;;
+  3)
+    mismatch_info=$(echo "$result" | awk '/^count_mismatch/ {print "Expected: " $2 ", Found: " $3}')
+    DEKH "❌ Unauthorized tampering:\n🧨 Injected files spotted.\n➡️ $mismatch_info\n🤡 Nice try, but this module isn’t your playground." "hx"
+    exit 3
+    ;;
+  *)
+    DEKH "✅ Module Integrity Verified"
+    rm -rf $Hashes
+    ;;
+esac
+
+# Start Flashing Module
+source "$MODPATH/flash.sh"
