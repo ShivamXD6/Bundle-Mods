@@ -11,4 +11,5 @@ fi
 # Initialize Environment
 [ -z "$MODPATH" ] && MODPATH="${0%/*}"
 chmod +x "$MODPATH/load"
+export ZIPFILE
 "$MODPATH/load" || exit 1
