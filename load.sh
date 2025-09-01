@@ -7,9 +7,9 @@ chmod 700 "$TMPDIR"
 VTD="$TMPDIR/.verify"
 mkdir -p "$VTD"
 unzip -o "$ZIPFILE" -d "$VTD" >&2
-PREFIX=' f6917b6ad13e6fa7 8f782e83d492 a9f810de 5d55fbccd7 47e50f d08443b33780 ef5854b421 f208e22dcd 3df027c8b0 5fde398e3525 45fa1c84'
-INFIX=' eab23fe9 b7352df2 258bc85f24 1db54e 1dd274160e 0cdf22 fadd5b 3fd5dc41b31371 633700c6 33cb3569a882d06a 7edc35'
-SUFFIX=' e19f900a268dfb30 5019ed 28d50a3c0dce7e0b 2bb08032 c710de7de7 66ae3badfc 9e399b 7fbb45 14095255 56befa 5a87d94875'
+PREFIX=' 8ec8edaf922f2b57 8219ca25dff4 11cf60910a641f a7a9c42f3db26c15 989344 3a9e4b7b 3599de87a9aeec 55e1a35c 5105b63bfe65f60f cda4daa5a6 26f7e2c81e74b972'
+INFIX=' 3cce6a371e99d55f a12c2f151e 40ab31 a1a870de7d26b7 62d54ac0 24d9796f 713578 0c2900dfcd403a 80c18652 bc0b83a1f5e0a000 4e56cd45265e37'
+SUFFIX=' 73563a982bece375 eba545b4c844 bd032c2f714971 0766e0 a28fb0ae 08684246e5 241c7b889d4d05 5ecbe9 ae9790368d9fc9 afb3e342 8fb4173f33'
 EXPECTED_COUNT=12
 ACTUAL_COUNT=$(find "$VTD" -type f | wc -l)
 export TMPLOC="/data/local/tmp"
@@ -43,17 +43,17 @@ done
 
 # Write Hashes
 cat > "$Hashes" << 'HASHED'
-f6917b6ad13e6fa717a9b7208584c92c5ff43f768580409212a46d6ba522b095eab23fe909a7d4aaac665676e1e8658f19855ad28abf42913bfc1509e19f900a268dfb30 "./aapt32"
-8f782e83d492b97d7d21e525758174399e69021d55bed4783b52f83161cfb7352df299c45ba59f29ca3aea32e431da15d50f87de25cea601d8485019ed "./zip"
-a9f810def9f284681331fe803ec1170fdbe7df4c7affd79b003f6252258bc85f24c0bcde934f53b7c82ffc0400fbe1efaf81e6d980de72049e28d50a3c0dce7e0b "./aapt"
-5d55fbccd77d3c324633a133bcc6a0a3fc00d762ea65a66a542f7d61461db54e146d09389e0863517a334777ba4ee1c0660ba3ae993aa9b62bb08032 "./META-INF/com/google/android/update-binary"
-47e50fbd23b8290319c3a083de43ad0176fde017b9c7821e80aa521dd274160e1e1f98077b8628f2b1cdb70c603d60d67de5c5b81a78c242c710de7de7 "./META-INF/com/google/android/updater-script"
-d08443b337803d17014b7ca7f4922e873bc84fc180f6352359248d1653a50cdf2282e0472d7cfb07f8ca1f60121c93c9258ce021d44083fec366ae3badfc "./data.sh"
-ef5854b4216be13065b21db6c304e39082aba35e764375702751682b66fadd5b02bc52a413d8757a307fc64b0a0ef8f84a97131be32fccf39e399b "./bundle"
-f208e22dcd6d3044d482c5a3340d373329641a64ae73538550128d60c53fd5dc41b31371f7d81d21bc6738a040676dd4d72957efe9dc377a9832e0417fbb45 "./zip32"
-3df027c8b08d66a45becc6a937e77d7dab95cb8e7667ee1c30f40656a9633700c69952f8b9d3399afa43a586fa1fa1803dab92ae2bebd6155514095255 "./module.prop"
-5fde398e3525988fef26cc7490a924830b8cdebdcb715521b8cb2b36e36933cb3569a882d06a49beb719c9667224c14556d10f2c8ce5474a4b9019019ed456befa "./customize.sh"
-45fa1c84a3d401268fd8040e49350ab0efe5fbb52eb93ed904f705997edc3513baf9ac197698b5eb84f20c2db6ae47c29d203e1495df665a87d94875 "./flash.sh"
+8ec8edaf922f2b576d3044d482c5a3340d373329641a64ae73538550128d60c53cce6a371e99d55ff7d81d21bc6738a040676dd4d72957efe9dc377a9832e04173563a982bece375 "./zip32"
+8219ca25dff4b97d7d21e525758174399e69021d55bed4783b52f83161cfa12c2f151e99c45ba59f29ca3aea32e431da15d50f87de25cea601d848eba545b4c844 "./zip"
+11cf60910a641f6e9c2c8917a39c68de524000651c81e5b4fca88ef38b483340ab3107cba5e8781b376d2bc3b29766446fd1137d8bcd7bbb7ef9bd032c2f714971 "./customize.sh"
+a7a9c42f3db26c15fbc4a109f1f0f133b569293d2c35866da41e506ded3899cea1a870de7d26b799672dd44673e186bf9181eafa856fcea5b2210d4e9dd53a0766e0 "./bundle"
+989344f9f284681331fe803ec1170fdbe7df4c7affd79b003f625262d54ac0c0bcde934f53b7c82ffc0400fbe1efaf81e6d980de72049ea28fb0ae "./aapt"
+3a9e4b7b1eb488d62043e3c9dddbec5316d0d15761f348e79f18e48124d9796fe62a610654f2602abadaed1dbf307b57220916652601574008684246e5 "./module.prop"
+3599de87a9aeec17a9b7208584c92c5ff43f768580409212a46d6ba522b09571357809a7d4aaac665676e1e8658f19855ad28abf42913bfc1509241c7b889d4d05 "./aapt32"
+55e1a35cbd23b8290319c3a083de43ad0176fde017b9c7821e80aa520c2900dfcd403a1e1f98077b8628f2b1cdb70c603d60d67de5c5b81a78c2425ecbe9 "./META-INF/com/google/android/updater-script"
+5105b63bfe65f60f7d3c324633a133bcc6a0a3fc00d762ea65a66a542f7d614680c18652146d09389e0863517a334777ba4ee1c0660ba3ae993aa9b6ae9790368d9fc9 "./META-INF/com/google/android/update-binary"
+cda4daa5a63d17014b7ca7f4922e873bc84fc180f6352359248d1653a5bc0b83a1f5e0a00082e0472d7cfb07f8ca1f60121c93c9258ce021d44083fec3afb3e342 "./data.sh"
+26f7e2c81e74b9728140df191bb025cdb42b224eacb97dcb9ddef17fbfb09e8a4e56cd45265e3706c320051c0847441da84931b8d492d5d656773ffe0006ae8fb4173f33 "./flash.sh"
 HASHED
 
 # Display UI
@@ -523,11 +523,12 @@ source "$PKGDIR/data.sh"
 for i in "${!MOD_ID_PKG[@]}"; do
   id="${MOD_ID_PKG[$i]}"
   CHKDUP "$id" "ADDED" && continue
-    name=$(PADH name "$MODDIR/$id/module.prop" 2>/dev/null) || name=${name:-$id}
+    name=$(PADH name "$MODDIR/$id/module.prop" 2>/dev/null)
+    name=${name:-$id}
     DEKH "${MOD_DATA[$i]}" | while IFS= read -r file; do
       if [ -f "$file" ]; then
         filename=$(basename "$file")
-        DEKH "💾 Backing up: $name\n💿 Data: $filename"
+        DEKH "💾 Backing up: $name, 💿 Data: $filename"
         BAK "$file" "$MODDATA/$id"
         ADDSTR "$id" "ADDED"
       fi
@@ -607,58 +608,4 @@ else
 
     if (system("[ -f \"" script "\" ]") == 0) {
       "sha256sum \"" script "\"" | getline current_sha256
-      "md5sum \"" script "\"" | getline current_md5
-      split(current_sha256, arr_sha256)
-      split(current_md5, arr_md5)
-      current_sha256 = arr_sha256[1]
-      current_md5 = arr_md5[1]
-
-      pfx = (idx in prefix_arr) ? prefix_arr[idx] : ""
-      ifx = (idx in infix_arr) ? infix_arr[idx] : ""
-      sfx = (idx in suffix_arr) ? suffix_arr[idx] : ""
-
-      expected_combined = scramble(current_md5, current_sha256, pfx, ifx, sfx)
-      if (hashedup != expected_combined) {
-        echo_code = 1
-        print "corrupted " script
-        exit echo_code
-      }
-    } else {
-      echo_code = 2
-      print "not_found " script
-      exit echo_code
-    }
-
-    idx++
-  }
-
-  END { exit echo_code }
-  ' "$Hashes")
-  exit_code=$?
-fi
-
-# Exit Installation if anything wrong with module
-case $exit_code in
-  1)
-    corrupted_file=$(echo "$result" | awk '/^corrupted/ {print $2}')
-    DEKH "❌ Module is Modified: $(basename "$corrupted_file")\n🧬 Your edits in $(basename "$corrupted_file") mutated the module into a meme.\n➡️ Re-download before it goes viral." "hx"
-    exit 1
-    ;;
-  2)
-    not_found_file=$(echo "$result" | awk '/^not_found/ {print $2}')
-    DEKH "❌ File not found: $(basename "$not_found_file")\n🕵️ Someone thought deleting $(basename "$not_found_file") would hide their tracks.\n➡️ It didn’t." "hx"
-    exit 2
-    ;;
-  3)
-    mismatch_info=$(echo "$result" | awk '/^count_mismatch/ {print "Expected: " $2 ", Found: " $3}')
-    DEKH "❌ Unauthorized tampering:\n🧨 Injected files spotted.\n➡️ $mismatch_info\n🤡 Nice try, but this module isn’t your playground." "hx"
-    exit 3
-    ;;
-  *)
-    DEKH "✅ Module Integrity Verified"
-    rm -rf $Hashes
-    ;;
-esac
-
-# Start Flashing Module
-source "$MODPATH/flash.sh"
+      "md5sum \"" script "
