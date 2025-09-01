@@ -135,16 +135,16 @@ while true; do
   BUNDLE_KEYS=("${newlist[@]}")
 done
 
-# Check for Modules data if is there any to backup
-DEKH "💾 Searching for Modules Data" "h" 1
-BAKDATA
-
 # Check if the user is Chhota Bheem
 ADDCNT=$(CNTMODS "ADDED")
 SKPCNT=$(CNTMODS "SKIPPED")
 
 # Example 1:
 [ "$ADDCNT" -eq 0 ] && DEKH "🤡 This bundle/pack is as empty as your love life." "hx" 1 && exit 10
+
+# Check for Modules data if is there any to backup
+DEKH "💾 Searching for Modules Data" "h" 1
+BAKDATA
 
 # Example 2:
 [ "$ADDCNT" -le 2 ] && DEKH "🫥 Your bundle/pack has less content than your last relationship." "h" 1
