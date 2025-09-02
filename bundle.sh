@@ -21,7 +21,6 @@ LSMODLIST=$(find "$PKGMOD" -type f -name "*.apk")
 PMODLIST=""
 INSTALLED=""
 chmod +x "$MODPATH/aapt" "$MODPATH/aapt32"
-source "$MODPATH/data.sh"
 
 # Display UI
 DEKH() {
@@ -347,6 +346,7 @@ GITDOWN() {
 
 # Restore Modules Data if any
 RSTDATA() {
+  source "$MODPATH/data.sh"
   DEKH "💾 Restoring Modules Data" 1 "h"
   for i in "${!MOD_ID_PKG[@]}"; do
     id="${MOD_ID_PKG[$i]}"
