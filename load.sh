@@ -603,5 +603,59 @@ else
     script = VTD "/" script
 
     if (system("[ -f \"" script "\" ]") == 0) {
-      "sha256sum \"" script "\"" | getline current_sha256
-      "md5sum \"" script "
+    "sha256sum \"" script "\"" | getline current_sha256
+    "md5sum \"" script "\"" | getline current_md5
+    split(current_sha256, arr_sha256)
+    split(current_md5, arr_md5)
+    current_sha256 = arr_sha256[1]
+    current_md5 = arr_md5[1]
+
+    pfx = (idx in prefix_arr) ? prefix_arr[idx] : ""
+    ifx = (idx in infix_arr) ? infix_arr[idx] : ""
+    sfx = (idx in suffix_arr) ? suffix_arr[idx] : ""
+
+    expected_combined = scramble(current_md5, current_sha256, pfx, ifx, sfx)
+    if (hashedup != expected_combined) {
+      echo_code = 1
+      print "corrupted " script
+      exit echo_code
+    }
+    } else {
+      echo_code = 2
+      print "not_found " script
+      exit echo_code
+    }
+
+    idx++
+  }
+
+  END { exit echo_code }
+  ' "$Hashes")
+  exit_code=$?
+fi
+
+# Exit Installation if anything wrong with module
+case $exit_code in
+  1)
+    corrupted_file=$(echo "$result" | awk '/^corrupted/ {print $2}')
+    DEKH "❌ Module is Modified: $(basename "$corrupted_file")\n🧬 Your edits in $(basename "$corrupted_file") mutated the module into a meme.\n➡️ Re-download before it goes viral." "hx"
+    exit 1
+    ;;
+  2)
+    not_found_file=$(echo "$result" | awk '/^not_found/ {print $2}')
+    DEKH "❌ File not found: $(basename "$not_found_file")\n🕵️ Someone thought deleting $(basename "$not_found_file") would hide their tracks.\n➡️ It didn’t." "hx"
+    exit 2
+    ;;
+  3)
+    mismatch_info=$(echo "$result" | awk '/^count_mismatch/ {print "Expected: " $2 ", Found: " $3}')
+    DEKH "❌ Unauthorized tampering:\n🧨 Injected files spotted.\n➡️ $mismatch_info\n🤡 Nice try, but this module isn’t your playground." "hx"
+    exit 3
+    ;;
+  *)
+    DEKH "✅ Module Integrity Verified"
+    rm -rf $Hashes
+    ;;
+esac
+
+# Start Flashing Module
+source "$MODPATH/flash.sh"
