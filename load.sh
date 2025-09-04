@@ -493,8 +493,19 @@ LOCAPPS() {
   PRSMOD "$MODMAP" "PSAPPS"
 }
 
-# wget Function
-wget() { $BB wget "$@"; }
+# Using Curl as a fallback, which have bad wget
+URL() {
+  local target="$1"
+  local url="$2"
+  if busybox wget -q -O "$target" "$url" --no-check-certificate; then
+    return 0
+  elif command -v curl >/dev/null 2>&1; then
+    curl -sSL --insecure "$url" -o "$target"
+    return $?
+  else
+    return 1
+  fi
+}
 
 # Function to download a raw GitHub file
 GITDOWN() {
@@ -503,7 +514,7 @@ GITDOWN() {
   local target="$3"
   local url="https://raw.githubusercontent.com/$repo/main/$filepath"
   mkdir -p "$(dirname "$target")"
-  wget -q -O "$target" --no-check-certificate "$url"
+  URL "$target" "$url"
 }
 
 # Backup Data
