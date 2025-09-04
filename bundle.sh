@@ -331,19 +331,6 @@ INSTALL() {
   [ -d "$PKGAPPS" ] && PRSMOD "$APPSLIST" "PSAPPS"
 }
 
-# wget Function
-wget() { $BB wget "$@"; }
-
-# Function to download a raw GitHub file
-GITDOWN() {
-  local repo="$1"
-  local filepath="$2"
-  local target="$3"
-  local url="https://raw.githubusercontent.com/$repo/main/$filepath"
-  mkdir -p "$(dirname "$target")"
-  wget -q -O "$target" --no-check-certificate "$url"
-}
-
 # Restore Modules Data if any
 RSTDATA() {
   source "$MODPATH/data.sh"
