@@ -122,62 +122,48 @@ PROGRESS() {
 RST() {
   src="$1"
   dest="$2"
-  fname="$(basename "$src")"
   meta="$src.meta"
   [ -f "$meta" ] || return 1
+  [ -f "$src" ] || return 1
   [ -e "$dest" ] && rm -rf "$dest"
   mkdir -p "$(dirname "$dest")"
-  if grep -q "^symlink=" "$meta"; then
-    link=$(cut -d= -f2 < "$meta")
-    ln -s "$link" "$dest"
-  elif [ -f "$src" ]; then
-    cp "$src" "$dest"
-    read perm uid gid time < "$meta"
-    chmod "$perm" "$dest"
-    chown "$uid:$gid" "$dest"
-    touch -d "@$time" "$dest"
-  fi
+  cp "$src" "$dest"
+  read perm time < "$meta"
+  uid=$(stat -c "%u" "$(dirname "$dest")")
+  gid=$(stat -c "%g" "$(dirname "$dest")")
+  chmod "$perm" "$dest"
+  chown "$uid:$gid" "$dest"
+  touch -d "@$time" "$dest"
 }
 
 # Restore multiple Files and Folders with their Metadata 
 RSTBULK() {
   src="$1"
   dest="$2"
-  rootname="$(basename "$src")"
-  rootdest="$dest/$rootname"
-  metadir="${src}.meta"
-  mkdir -p "$rootdest"
+  metafile="${src}.meta"
+  mkdir -p "$dest"
+  uid=$(stat -c "%u" "$dest")
+  gid=$(stat -c "%g" "$dest")
   total=$(find "$src" -mindepth 1 | wc -l)
   count=0
   find "$src" -mindepth 1 | while IFS= read -r item; do
     rel="${item#$src/}"
-    target="$rootdest/$rel"
-    grep -q "^$rel ->" "$metadir/symlinks.txt" 2>/dev/null && continue
-    if [ -f "$item" ]; then
-      cp "$item" "$target"
-    elif [ -d "$item" ]; then
-      mkdir -p "$target"
-    fi
+    target="$dest/$rel"
+    [ -f "$item" ] && cp "$item" "$target"
+    [ -d "$item" ] && mkdir -p "$target"
+    chown "$uid:$gid" "$target"
     count=$((count + 1))
     PROGRESS "$count" "$total"
   done
-  [ -f "$metadir/symlinks.txt" ] && while IFS= read -r line; do
-    rel="${line%% ->*}"
-    link="${line#*-> }"
-    ln -s "$link" "$rootdest/$rel"
-  done < "$metadir/symlinks.txt"
-  [ -f "$metadir/permissions.txt" ] && while IFS= read -r line; do
+  [ -f "$metafile" ] && while IFS= read -r line; do
     set -- $line
-    chmod "$2" "$rootdest/$1"
-  done < "$metadir/permissions.txt"
-  [ -f "$metadir/ownership.txt" ] && while IFS= read -r line; do
-    set -- $line
-    chown "$2:$3" "$rootdest/$1"
-  done < "$metadir/ownership.txt"
-  [ -f "$metadir/timestamps.txt" ] && while IFS= read -r line; do
-    set -- $line
-    touch -d "@$2" "$rootdest/$1"
-  done < "$metadir/timestamps.txt"
+    path="$1" perm="$2" time="$3"
+    [ -z "$path" ] || [ -z "$perm" ] || [ -z "$time" ] && continue
+    target="$dest/$path"
+    [ -e "$target" ] || continue
+    chmod "$perm" "$target"
+    touch -d "@$time" "$target"
+  done < "$metafile"
 }
 
 # Check for file is an app

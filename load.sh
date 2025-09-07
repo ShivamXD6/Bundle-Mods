@@ -19,9 +19,9 @@ MODDIR="$ADBDIR/modules"
 SDDIR=$(realpath "/sdcard")
 DOWNDIR="$SDDIR/Download"
 SELDIR="$DOWNDIR/Delete-To-Add"
+SELFLD="$(basename $SELDIR)"
 SRPTDIR="$DOWNDIR/Add-Your-Script"
 SELSRT="$(basename $SRPTDIR)"
-SELFLD="$(basename $SELDIR)"
 Hashes="$MODPATH/hashes"
 PKGDIR="$MODPATH/PACKED"
 PKGMOD="$PKGDIR/MODULES"
@@ -204,15 +204,10 @@ BAK() {
   fname="$(basename "$src")"
   target="$dest/$fname"
   meta="$target.meta"
-  [ -e "$src" ] || return 1
+  [ -f "$src" ] || return 1
   mkdir -p "$dest"
-  if [ -L "$src" ]; then
-    link=$(readlink "$src")
-    echo "symlink=$link" > "$meta"
-  elif [ -f "$src" ]; then
-    cp "$src" "$target"
-    stat -c "%a %u %g %Y" "$src" > "$meta"
-  fi
+  cp "$src" "$target"
+  stat -c "%a %Y" "$src" > "$meta"
 }
 
 # Backup multiple Files and Folders with their Metadata
@@ -221,8 +216,8 @@ BAKBULK() {
   dest="$2"
   rootname="$(basename "$src")"
   rootdest="$dest/$rootname"
-  metadir="$dest/${rootname}.meta"
-  mkdir -p "$rootdest" "$metadir"
+  metafile="$dest/${rootname}.meta"
+  mkdir -p "$rootdest"
   total=$(find "$src" -mindepth 1 | wc -l)
   count=0
   find "$src" -mindepth 1 | while IFS= read -r item; do
@@ -230,28 +225,15 @@ BAKBULK() {
     target="$rootdest/$rel"
     dir="$(dirname "$target")"
     [ -d "$dir" ] || mkdir -p "$dir"
-    if [ -L "$item" ]; then
-      link=$(readlink "$item")
-      echo "$rel -> $link" >> "$metadir/symlinks.txt"
-    elif [ -f "$item" ]; then
-      cp "$item" "$target"
-    elif [ -d "$item" ]; then
-      mkdir -p "$target"
-    fi
+    [ -f "$item" ] && cp "$item" "$target"
+    [ -d "$item" ] && mkdir -p "$target"
     perm=$(stat -c "%a" "$item")
-    uid=$(stat -c "%u" "$item")
-    gid=$(stat -c "%g" "$item")
     time=$(stat -c "%Y" "$item")
-    echo "$rel $perm" >> "$metadir/permissions.txt"
-    echo "$rel $uid $gid" >> "$metadir/ownership.txt"
-    echo "$rel $time" >> "$metadir/timestamps.txt"
+    echo "$rel $perm $time" >> "$metafile"
     count=$((count + 1))
     PROGRESS "$count" "$total"
   done
-  echo
-  echo ". $(stat -c "%a" "$src")" >> "$metadir/permissions.txt"
-  echo ". $(stat -c "%u" "$src") $(stat -c "%g" "$src")" >> "$metadir/ownership.txt"
-  echo ". $(stat -c "%Y" "$src")" >> "$metadir/timestamps.txt"
+  echo ". $(stat -c "%a" "$src") $(stat -c "%Y" "$src")" >> "$metafile"
 }
 
 # Process list safely with spaces (Mod List & Function)
