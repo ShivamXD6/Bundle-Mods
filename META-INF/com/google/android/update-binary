@@ -30,6 +30,6 @@ mount /data 2>/dev/null
 [ -f /data/adb/magisk/util_functions.sh ] || require_new_magisk
 . /data/adb/magisk/util_functions.sh
 [ $MAGISK_VER_CODE -lt 20400 ] && require_new_magisk
-[ ! -f $MODPATH/load" ] && echo -e "❌ Tampering detected:\n🧃 You removed the brain and expected it to think.\n➡️ Genius. Re-download, Einstein." && exit 5
+
 install_module
 exit 0
