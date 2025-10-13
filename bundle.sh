@@ -9,23 +9,20 @@ export TMPLOC="/data/local/tmp"
 mkdir -p "$TMPLOC"
 MODDIR="$ADBDIR/modules"
 MUPDIR="$ADBDIR/modules_update"
+SDDIR=$(realpath "/sdcard")
+EXTSD=$(find /storage -mindepth 1 -maxdepth 1 -type d 2>/dev/null | grep -Ev '/(emulated|self)' | grep -E '/[0-9A-Z]{4,}-[0-9A-Z]{4,}$' | head -n 1)
 PKGMOD="$MODPATH/MODULES"
 PKGAPPS="$MODPATH/APPS"
 MODDATA="$PKGMOD/DATA"
 ARCH=$(getprop ro.product.cpu.abi)
-[ -d "$PKGMOD" ] && {
-ZMODLIST=$(find "$PKGMOD" -type f -name "*.zip")
-LSMODLIST=$(find "$PKGMOD" -type f -name "*.apk")
-}
-[ -d "$PKGAPPS" ] && APPSLIST="$(find "$PKGAPPS" -type f \( -name "*.apk" -o -name "*.apks" -o -name "*.apkm" \))"
-PMODLIST=""
-INSTALLED=""
-chmod +x "$MODPATH/aapt" "$MODPATH/aapt32"
+PORYGONZ="$MODPATH/porygonz"
+ZAPDOS="$MODPATH/zapdos"
+chmod +x "$PORYGONZ" "$ZAPDOS"
 
 # Display UI
 DEKH() {
   orgsandesh="$1"; samay="${2:-0.2}"; prakar="${3}"
-  [[ "$2" == h* ]] && prakar="${2}" && samay="${3:-0.5}"
+  [[ "$2" == h* ]] && prakar="${2}" && samay="${3:-0.2}"
   echo "$orgsandesh" | grep -q '[^ -~]' && sandesh=" $orgsandesh" || sandesh=" $orgsandesh "
   rekha=$(printf "%s\n" "$sandesh" | awk '{ print length }' | sort -nr | head -n1)
   [ "$rekha" -gt 50 ] && rekha=50
