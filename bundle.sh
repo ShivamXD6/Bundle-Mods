@@ -19,6 +19,12 @@ PORYGONZ="$MODPATH/porygonz"
 ZAPDOS="$MODPATH/zapdos"
 chmod +x "$PORYGONZ" "$ZAPDOS"
 
+# Only 64-Bit Supported
+echo "$ARCH" | grep -qE 'arm64-v8a' || {
+  DEKH "🧨 This module requires a 64-bit environment. Exiting..."
+  exit 1
+}
+
 # Display UI
 DEKH() {
   orgsandesh="$1"; samay="${2:-0.2}"; prakar="${3}"
@@ -75,14 +81,6 @@ OPT() {
     break
   done
 }
-
-# Pick Binary whichever works
-PICKBIN() {
-  "$1" --help >/dev/null 2>&1 && echo "$1" || echo "$2"
-}
-
-ZIP=$(PICKBIN "$MODPATH/zip32" "$MODPATH/zip")
-AAPT=$(PICKBIN "$MODPATH/aapt32" "$MODPATH/aapt")
 
 # Count Strings from Registry
 CNTMODS() {

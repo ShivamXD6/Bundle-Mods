@@ -16,9 +16,10 @@ touch "$PKGDIR/flash.sh"
 cp -af "$VTD/META-INF" "$PKGDIR/META-INF"
 cp -af "$VTD/customize.sh" "$PKGDIR/customize.sh"
 cp -af "$VTD/bundle" "$PKGDIR/load"
-cp -af "$VTD/aapt" "$PKGDIR/aapt"
-cp -af "$VTD/aapt32" "$PKGDIR/aapt32"
+cp -af "$VTD/porygonz" "$PKGDIR/porygonz"
+cp -af "$VTD/zapdos" "$PKGDIR/zapdos"
 cp -af "$VTD/module.prop" "$PKGDIR/module.prop"
+
 cat > "$PKGDIR/flash.sh" << 'FINISH'
 # Module Info UI
 DEKH "$(PADH "name" "$MODPATH/module.prop")" "h#" 1
@@ -206,7 +207,7 @@ SET version "$(PADH "version" "$MODPATH/module.prop") [$NOW]" "$PKGDIR/module.pr
 DEKH "🗜️ Compressing your Bundle Pack." "h"
 PACKFILE="$DOWNDIR/$CUSNAME.zip"
 cd "$PKGDIR"
-$ZIP -qr "$PACKFILE" .
+$SNORLAX -0 -qr "$PACKFILE" .
 
 DEKH "🔗 Do you want to join @BuildBytes for more stuffs like that?" "h#" 1
 DEKH "🔊 Vol+ = Yes\n🔉 Vol- = No\n"

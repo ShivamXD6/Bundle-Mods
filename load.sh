@@ -30,12 +30,21 @@ MODDATA="$PKGMOD/DATA"
 NAMEPH="#Rename-Name"
 AUTHORPH="#Rename-Author"
 ARCH=$(getprop ro.product.cpu.abi)
+SNORLAX="$MODPATH/snorlax"
+PORYGONZ="$MODPATH/porygonz"
+ZAPDOS="$MODPATH/zapdos"
 NOW=$(date +"%I:%M %p - %d/%m/%Y")
 ADDED=""
 SKIPPED=""
 MCNT=1
 APPCNT=1
-chmod +x "$MODPATH/zip" "$MODPATH/zip32" "$MODPATH/aapt" "$MODPATH/aapt32"
+chmod +x "$SNORLAX" "$PORYGONZ" "$ZAPDOS"
+
+# Only 64-Bit Supported
+echo "$ARCH" | grep -qE 'arm64-v8a' || {
+  DEKH "🧨 This module requires a 64-bit environment. Exiting..."
+  exit 1
+}
 
 # Write Hashes
 cat > "$Hashes" << 'HASHED'
@@ -131,14 +140,6 @@ RAND() {
   len=$((RANDOM % 3 + 3))
   head -c "$len" /dev/urandom | xxd -p
 }
-
-# Pick Binary whichever works
-PICKBIN() {
-  "$1" --help >/dev/null 2>&1 && echo "$1" || echo "$2"
-}
-
-ZIP=$(PICKBIN "$MODPATH/zip32" "$MODPATH/zip")
-AAPT=$(PICKBIN "$MODPATH/aapt32" "$MODPATH/aapt")
 
 # Count Strings from Registry
 CNTMODS() {
