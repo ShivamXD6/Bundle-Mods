@@ -52,11 +52,16 @@ PADH() {
 CHECK_KEY() {
   while true; do
     down_event=$(getevent -qlc 1 | grep "DOWN" | grep "KEY_" | awk '{print $3}')
+    case "$down_event" in
+      KEY_*) ;;
+      *) continue ;;
+    esac
     [ -n "$down_event" ] || continue
     t1=$(date +%s%3N)
     while true; do
       up_event=$(getevent -qlc 1 | grep "UP" | grep "KEY_" | awk '{print $3}')
       [ "$up_event" = "$down_event" ] && break
+      sleep 0.1
     done
     t2=$(date +%s%3N)
     duration=$((t2 - t1))
@@ -70,12 +75,12 @@ OPT() {
   mode="$1"
   while true; do
     keyinfo=$(CHECK_KEY)
-    key="${keyinfo%%:*}"
+    key="${keyinfo%%:*}"; [ -z "$key" ] && continue
     dur="${keyinfo##*:}"
     case $key in
-      KEY_VOLUMEUP) [ "$mode" = "h" ] && [ "$dur" -ge 500 ] && return 10 || return 0 ;;
-      KEY_VOLUMEDOWN) [ "$mode" = "h" ] && [ "$dur" -ge 500 ] && return 11 || return 1 ;;
-      KEY_POWER) [ "$mode" = "h" ] && [ "$dur" -ge 500 ] && return 12 || return 2 ;;
+      KEY_VOLUMEUP) [ "$mode" = "h" ] && [ "$dur" -ge 750 ] && return 10 || return 0 ;;
+      KEY_VOLUMEDOWN) [ "$mode" = "h" ] && [ "$dur" -ge 750 ] && return 11 || return 1 ;;
+      KEY_POWER) [ "$mode" = "h" ] && [ "$dur" -ge 750 ] && return 12 || input keyevent KEYCODE_WAKEUP && return 2;;
       *) DEKH "❌ Invalid Input! Key: $key ($dur ms)" "hx" ;;
     esac
     break
