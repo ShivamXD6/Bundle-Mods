@@ -64,7 +64,7 @@ HASHED
 # Display UI
 DEKH() {
   orgsandesh="$1"; samay="${2:-0.2}"; prakar="${3}"
-  [[ "$2" == h* ]] && prakar="${2}" && samay="${3:-0.5}"
+  [[ "$2" == h* ]] && prakar="${2}" && samay="${3:-0.2}"
   echo "$orgsandesh" | grep -q '[^ -~]' && sandesh=" $orgsandesh" || sandesh=" $orgsandesh "
   rekha=$(printf "%s\n" "$sandesh" | awk '{ print length }' | sort -nr | head -n1)
   [ "$rekha" -gt 50 ] && rekha=50
@@ -132,13 +132,21 @@ SET() {
 
 # Find BusyBox Binary
 BBOX() {
-  [ "$BUSYBOX" ] && return 0
+  if busybox --help >/dev/null 2>&1; then
+    BB=busybox
+    return 0
+  fi
   for p in "$ADBDIR"/{modules/busybox-ndk/system/*,magisk,ksu/bin,ap/bin}/busybox; do
-    [ -f "$p" ] && export BB="$p" && return 0
+    [ -f "$p" ] && BB="$p" && export BB && return 0
   done
   return 1
 }
 BBOX
+
+# Use Busybox Unzip
+unzip() {
+  "$BB" unzip "$@"
+}
 
 # Random 6-10 digits string
 RAND() {

@@ -87,6 +87,24 @@ OPT() {
   done
 }
 
+# Find BusyBox Binary
+BBOX() {
+  if busybox --help >/dev/null 2>&1; then
+    BB=busybox
+    return 0
+  fi
+  for p in "$ADBDIR"/{modules/busybox-ndk/system/*,magisk,ksu/bin,ap/bin}/busybox; do
+    [ -f "$p" ] && BB="$p" && export BB && return 0
+  done
+  return 1
+}
+BBOX
+
+# Use Busybox Unzip
+unzip() {
+  "$BB" unzip "$@"
+}
+
 # Count Strings from Registry
 CNTMODS() {
   eval "printf '%s\n' \"\${$1}\"" | grep -c '.'
