@@ -120,6 +120,11 @@ CHKDUP() {
   eval "printf '%s\n' \"\${$2}\"" | grep -Fxq -- "$1"
 }
 
+# Remove Strings from Registry
+DELSTR() {
+  eval "$2=\$(printf '%s\n' \"\${$2}\" | grep -Fxv -- \"\$1\")"
+}
+
 # Show Progress Bar Dynamically
 PROGRESS() {
   cur=$1 total=$2

@@ -169,6 +169,11 @@ CHKDUP() {
   eval "printf '%s\n' \"\${$2}\"" | grep -Fxq -- "$1"
 }
 
+# Remove Strings from Registry
+DELSTR() {
+  eval "$2=\$(printf '%s\n' \"\${$2}\" | grep -Fxv -- \"\$1\")"
+}
+
 # Catch input by renaming file
 CRENAME() {
   dir="$1"
