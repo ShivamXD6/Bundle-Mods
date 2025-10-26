@@ -125,6 +125,16 @@ DELSTR() {
   eval "$2=\$(printf '%s\n' \"\${$2}\" | grep -Fxv -- \"\$1\")"
 }
 
+# Replace Symbols and Spaces with Underspace
+SANITIZE() {
+  local str="$1"; shift
+  if [ "$1" = "1" ]; then
+    echo "$str" | sed 's/[^a-zA-Z0-9]/_/g'
+  else
+    echo "$str" | sed 's/[[:punct:]]/ /g'
+  fi
+}
+
 # Show Progress Bar Dynamically
 PROGRESS() {
   cur=$1 total=$2
