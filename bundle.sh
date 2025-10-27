@@ -158,12 +158,13 @@ RST() {
   meta="$src.meta"
   [ -f "$meta" ] || return 1
   [ -f "$src" ] || return 1
-  [ -e "$dest" ] && rm -rf "$dest"
-  mkdir -p "$(dirname "$dest")"
-  cp "$src" "$dest"
+  destdir="$(dirname "$dest")"
+  [ ! -d "$destdir" ] && mkdir -p "$destdir" && own=1
+  cp -af "$src" "$dest"
   read perm time < "$meta"
-  uid=$(stat -c "%u" "$(dirname "$dest")")
-  gid=$(stat -c "%g" "$(dirname "$dest")")
+  [ "$own" -eq 1 ] && owndir="$(dirname "$destdir")" || owndir="$destdir"
+  uid=$(stat -c "%u" "$owndir")
+  gid=$(stat -c "%g" "$owndir")
   chmod "$perm" "$dest"
   chown "$uid:$gid" "$dest"
   touch -d "@$time" "$dest"
