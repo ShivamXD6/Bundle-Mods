@@ -183,7 +183,7 @@ RSTBULK() {
   find "$src" -mindepth 1 | while IFS= read -r item; do
     rel="${item#$src/}"
     target="$dest/$rel"
-    [ -f "$item" ] && cp "$item" "$target"
+    [ -f "$item" ] && cp -af "$item" "$target"
     [ -d "$item" ] && mkdir -p "$target"
     chown "$uid:$gid" "$target"
     count=$((count + 1))

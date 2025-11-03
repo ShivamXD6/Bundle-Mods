@@ -235,7 +235,7 @@ BAK() {
   meta="$target.meta"
   [ -f "$src" ] || return 1
   mkdir -p "$dest"
-  cp "$src" "$target"
+  cp -af "$src" "$target"
   stat -c "%a %Y" "$src" > "$meta"
 }
 
@@ -254,7 +254,7 @@ BAKBULK() {
     target="$rootdest/$rel"
     dir="$(dirname "$target")"
     [ -d "$dir" ] || mkdir -p "$dir"
-    [ -f "$item" ] && cp "$item" "$target"
+    [ -f "$item" ] && cp -af "$item" "$target"
     [ -d "$item" ] && mkdir -p "$target"
     perm=$(stat -c "%a" "$item")
     time=$(stat -c "%Y" "$item")
