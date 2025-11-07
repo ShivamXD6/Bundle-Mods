@@ -265,6 +265,19 @@ BAKBULK() {
   echo ". $(stat -c "%a" "$src") $(stat -c "%Y" "$src")" >> "$metafile"
 }
 
+# Get Sizes
+GETSIZE() {
+  case "$1" in
+    *[!0-9]*) du -sk "$@" 2>/dev/null | awk '{s+=$1} END{print s}' ;;
+    *) n="$1"
+      awk -v n="$n" 'BEGIN{
+        if(n>=1024*1024) printf "%.2f GB\n", n/1024/1024;
+        else if(n>=1024) printf "%.2f MB\n", n/1024;
+        else printf "%.2f KB\n", n;
+      }' ;;
+  esac
+}
+
 # Process list safely with spaces (Mod List & Function)
 PRSMOD() {
   TMPFILE="$TMPLOC/list.txt"
