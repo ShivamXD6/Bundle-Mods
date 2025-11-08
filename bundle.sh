@@ -233,6 +233,11 @@ PKG_INSTALLED() {
   [ "$ver" = "$2" ] || return 1
 }
 
+# Change Android ID
+CHANID() {
+  sed -i "/package=\"$1\"/s/\(value=\"\)[^\"]*\(.*defaultValue=\"\)[^\"]*/\1$2\2$2/" "/data/system/users/0/settings_ssaid.xml"
+}
+
 # Process list safely with spaces (Mod List & Function)
 PRSMOD() {
   TMPFILE="$TMPLOC/list.txt"
