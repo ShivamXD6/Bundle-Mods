@@ -337,6 +337,44 @@ CUS_SCRIPT() {
   rm -rf "$SRPTDIR"
 }
 
+# Get Permissions of an App
+GETPERM() {
+  PKG="$1"
+  FILE="$2"
+  in=0
+  > "$FILE"
+  dumpsys package "$PKG" | while IFS= read -r line; do
+    case "$line" in
+      *runtime\ permissions:*) in=1; continue ;;
+      [![:space:]]*) in=0 ;;
+    esac
+    if [ "$in" -eq 1 ]; then
+      case "$line" in
+        *granted=true*)
+          perm="${line%%:*}"
+          perm="${perm#"${perm%%[![:space:]]*}"}"
+          echo "$perm" >> "$FILE"
+          ;;
+      esac
+    fi
+  done
+  appops get "$PKG" 2>/dev/null | while IFS= read -r line; do
+    case "$line" in
+      *:*) ;; *) continue ;; esac
+    op=${line%%:*}
+    mode=${line#*:}
+    case "$mode" in
+      *allow*)
+        case "$op" in
+          SYSTEM_ALERT_WINDOW|WRITE_SETTINGS|USE_BIOMETRIC|START_FOREGROUND|PICTURE_IN_PICTURE|USE_FULL_SCREEN_INTENT|ACCESS_RESTRICTED_SETTINGS|NO_ISOLATED_STORAGE|WRITE_CLIPBOARD|WAKE_LOCK|REQUEST_INSTALL_PACKAGES)
+            echo "appops:$op" >> "$FILE"
+            ;;
+        esac
+        ;;
+    esac
+  done
+}
+
 # Read Android ID
 READID() {
   grep "package=\"$1\"" "/data/system/users/0/settings_ssaid.xml" 2>/dev/null | sed -n 's/.*value="\([^"]*\)".*/\1/p'

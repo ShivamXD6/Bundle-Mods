@@ -238,6 +238,23 @@ CHANID() {
   sed -i "/package=\"$1\"/s/\(value=\"\)[^\"]*\(.*defaultValue=\"\)[^\"]*/\1$2\2$2/" "/data/system/users/0/settings_ssaid.xml"
 }
 
+# Set Permissions for an app
+SETPERM() {
+  PKG="$1"
+  FILE="$2"
+  while IFS= read -r perm; do
+    case "$perm" in
+      appops:*)
+        op="${perm#appops:}"
+        appops set "$PKG" "$op" allow 2>/dev/null &
+        ;;
+      android.permission.*)
+        pm grant "$PKG" "$perm" 2>/dev/null &
+        ;;
+    esac
+  done < "$FILE"
+}
+
 # Process list safely with spaces (Mod List & Function)
 PRSMOD() {
   TMPFILE="$TMPLOC/list.txt"
