@@ -337,6 +337,11 @@ CUS_SCRIPT() {
   rm -rf "$SRPTDIR"
 }
 
+# Read Android ID
+READID() {
+  grep "package=\"$1\"" "/data/system/users/0/settings_ssaid.xml" 2>/dev/null | sed -n 's/.*value="\([^"]*\)".*/\1/p'
+}
+
 # Select or Detect deletion of Files
 SELECT() {
   am start -a android.intent.action.VIEW -d content://com.android.externalstorage.documents/document/primary:Download%2F$SELFLD >/dev/null 2>&1
