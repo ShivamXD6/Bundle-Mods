@@ -297,10 +297,16 @@ IS_PKG() {
   esac
 }
 
-# Check if app is installed or not
+# Check if an app is installed or not
 PKG_INSTALLED() {
   IS_PKG "$1" || return 1
-  pm list packages | grep -q "^package:$1$"
+  pm list packages | grep -q "^package:$1$" || return 1
+  [ -z "$2" ] && return 0
+  apkpath="$(pm path "$1" | sed -n 's/^package://p' | head -1)"
+  [ -z "$apkpath" ] && return 1
+  info="$("$PORYGONZ" dump badging "$apkpath" 2>/dev/null)" || return 1
+  ver="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f6)"
+  [ "$ver" = "$2" ] || return 1
 }
 
 # Add Custom Script
