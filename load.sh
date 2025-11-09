@@ -280,14 +280,11 @@ GETSIZE() {
 
 # Process list safely with spaces
 PRSMOD() {
-  TMPFILE="$(mktemp)"
-  echo "$1" > "$TMPFILE"
-  while IFS= read -r line || [ -n "$line" ]; do
-    [ -z "$line" ] && continue
-    "$2" "$line"
+  IFS='
+'; for line in $1; do
+    [ -n "$line" ] && "$2" "$line"
     [ "$Key" = "2" ] || [ "$Key" = "12" ] && break
-  done < "$TMPFILE"
-  rm -f "$TMPFILE"
+  done; unset IFS
 }
 
 # Check for file is an app
