@@ -255,13 +255,14 @@ SETPERM() {
   done < "$FILE"
 }
 
-# Process list safely with spaces (Mod List & Function)
+# Process list safely with spaces
 PRSMOD() {
-  TMPFILE="$TMPLOC/list.txt"
+  TMPFILE="$(mktemp)"
   echo "$1" > "$TMPFILE"
   while IFS= read -r line || [ -n "$line" ]; do
     [ -z "$line" ] && continue
     "$2" "$line"
+    [ "$Key" = "2" ] || [ "$Key" = "12" ] && break
   done < "$TMPFILE"
   rm -f "$TMPFILE"
 }
