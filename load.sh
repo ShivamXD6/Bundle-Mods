@@ -403,6 +403,18 @@ SELECT() {
   rm -rf "$SELDIR"
 }
 
+# Wait for processes to complete
+COOLDOWN() {
+  texts=(
+    "Almost there..." "Please wait..." "Hang tight!" "Just a sec..." "Thanks!" "One moment..." "Hold on..." "Nearly done..." "Final steps..." "Loading..."
+  )
+  while [ "$(pgrep -c tar)" -ge "$1" ]; do
+    msg="${texts[$((RANDOM % ${#texts[@]}))]}"
+    DEKH "⌛ Processes are finishing up. $msg."
+    sleep "$(( (RANDOM % 4) + 2 ))"
+  done
+}
+
 # Add Local Modules in Bundle
 LOCMOD() {
   [ ! -d "PKGMOD" ] && mkdir -p "PKGMOD"
