@@ -184,19 +184,6 @@ else
   DEKH "✅ Using Default Values: \n$CUSNAME by $CUSAUTHOR"
 fi
 
-# Add Custom Script
-DEKH "📃 Add a custom script to your module pack?" "h" 1
-DEKH "ℹ️ It can run before and/or after installation."
-DEKH "🔉 Vol+ = Add Pre & Post scripts\n🔉 Vol- = Skip Scripts\n🔊 Vol+ Hold = Add Pre only\n🔉 Vol- Hold = Add Post only"
-OPT h
-KEY="$?"
-case "$KEY" in
-  0)  CUS_SCRIPT "Pre-Install"; CUS_SCRIPT "Post-Install" ;;
-  10) CUS_SCRIPT "Pre-Install" ;;
-  11) CUS_SCRIPT "Post-Install" ;;
-  *)  DEKH "🚫 Skipping script addition." 1 ;;
-esac
-
 # Modify Module Prop
 SET name "$CUSNAME" "$PKGDIR/module.prop"
 SET author "$CUSAUTHOR" "$PKGDIR/module.prop"

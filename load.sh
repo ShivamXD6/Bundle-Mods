@@ -312,34 +312,6 @@ PKG_INSTALLED() {
   [ "$ver" = "$2" ] || return 1
 }
 
-# Add Custom Script
-CUS_SCRIPT() {
-  TYP="$1"
-  mkdir -p "$SRPTDIR"
-  DEKH "📂 Opening folder: '$SELSRT'" 1
-  DEKH "📜 Copy your $TYP script here." 1
-  DEKH "🔉 Press any Volume Key to skip." 2
-  am start -a android.intent.action.VIEW -d content://com.android.externalstorage.documents/document/primary:Download%2F$SELSRT >/dev/null 2>&1
-  while true; do
-    Key=124
-    [ -f "$SRPTDIR"/*.sh ] && break
-    timeout 1 OPT h && Key=$?
-    [ "$Key" -lt 124 ] && break
-    sleep 1
-  done
-  am force-stop com.android.documentsui >/dev/null 2>&1
-  am force-stop com.google.android.documentsui >/dev/null 2>&1
-  sleep 1
-  SCRIPT=$(ls "$SRPTDIR"/*.sh 2>/dev/null | head -n 1)
-  if [ -n "$SCRIPT" ]; then
-    cp -af "$SCRIPT" "$PKGDIR/$TYP.sh"
-    DEKH "✅ $TYP script added: $(basename "$SCRIPT")" 1
-  else
-    DEKH "👀 No $TYP script detected. Skipping..." 1
-  fi
-  rm -rf "$SRPTDIR"
-}
-
 # Get Permissions of an App
 GETPERM() {
   PKG="$1"
