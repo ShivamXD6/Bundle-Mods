@@ -409,7 +409,10 @@ RSTDATA() {
   for i in "${!MOD_ID_PKG[@]}"; do
     id="${MOD_ID_PKG[$i]}"
     name=$(PADH name "$MODDIR/$id/module.prop" 2>/dev/null)
-    name=${name:-$id}
+    [ -z "$name" ] && {
+      apk=$(pm path "$id" | sed 's/^package://' | head -1)
+      name=$(SANITIZE "$( "$PORYGONZ" dump badging "$apk" 2>/dev/null | grep -m1 "application-label:" | cut -d"'" -f2 )")
+    }
     if PKG_INSTALLED "$id" || [ -d "$MODDIR/$id" ]; then
       DEKH "${MOD_DATA[$i]}" | while IFS= read -r file; do
         fname="$(basename "$file")"
