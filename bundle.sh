@@ -6,7 +6,7 @@ chmod 700 "$TMPDIR"
 [ -z "$MODPATH" ] && MODPATH="${0%/*}"
 ADBDIR="/data/adb"
 export TMPLOC="/data/local/tmp"
-mkdir -p "$TMPLOC"
+rm -rf "$TMPLOC" && mkdir -p "$TMPLOC"
 MODDIR="$ADBDIR/modules"
 MUPDIR="$ADBDIR/modules_update"
 SDDIR=$(realpath "/sdcard")
@@ -125,7 +125,7 @@ CHKDUP() {
   eval "printf '%s\n' \"\${$2}\"" | grep -Fxq -- "$1"
 }
 
-# Replace Symbols and Spaces with Underspace
+# Replace Symbols with Spaces or Spaces with Underspace
 SANITIZE() {
   local str="$1"; shift
   if [ "$1" = "1" ]; then
@@ -276,130 +276,221 @@ COOLDOWN() {
   done
 }
 
-# Fetch and Display All Modules
-SHOWMODS() {
+# Unbundle Apps and It's directories
+UNBUNDAPP() {
+  COOLDOWN "$JOBS"
+  FILE="$1"; DEST="$2"
+  [ -f "$FILE" ] || return 
+  "$ZAPDOS" -d -q -c "$FILE" | tar -xf - -C "$DEST" &
+}
+
+# Fixes Per PKG Ownerships
+FIXOWN() {
+  ADGID=$(stat -c '%g' "/data/media/0/Android/data")
+  AMGID=$(stat -c '%g' "/data/media/0/Android/media")
+  AOGID=$(stat -c '%g' "/data/media/0/Android/obb")
+  while IFS='|' read -r PKG UID CUID; do
+    [ -d "/data/data/$PKG" ] && chown -R "$UID:$UID" "/data/data/$PKG"
+    [ -d "/data/user_de/0/$PKG" ] && chown -R "$UID:$UID" "/data/user_de/0/$PKG"
+    [ -d "/data/media/0/Android/data/$PKG" ] && chown -R "$UID:$ADGID" "/data/media/0/Android/data/$PKG"
+    [ -d "/data/media/0/Android/media/$PKG" ] && chown -R "$UID:$AMGID" "/data/media/0/Android/media/$PKG"
+    [ -d "/data/media/0/Android/obb/$PKG" ] && chown -R "$UID:$AOGID" "/data/media/0/Android/obb/$PKG"
+    pm enable "$PKG" > /dev/null 2>&1
+  done < "$TMPLOC/.ownerships"
+  rm -f "$TMPLOC/.ownerships"
+}
+
+# Restore Apps
+RSTAPP() {
+  PKG="$1"
+  APP="$2"
+  DEKH "🔁 Restoring: $label" 0.2 "'h"
+  "$ZAPDOS" -d -q -c "$APP/APP.bundle.pack" | tar -xf - -C "$TMPLOC"
+  andid="$(PADH SSAID "$APP/Meta.txt")"
+  oldsize="$(PADH Size "$APP/Meta.txt")"
+  if ! PKG_INSTALLED "$PKG" "$ver"; then
+    apks=$(find "$TMPLOC/$PKG" -name "*.apk" | sort)
+    [ ! -f "$APP/Permissions.txt" ] && all="-g"
+    pm install $all --dexopt-compiler-filter skip $apks > /dev/null 2>&1 || return 1
+    pm disable "$PKG" > /dev/null 2>&1 || return 1
+    pm compile "$PKG" > /dev/null 2>&1 &
+  else
+    DEKH "⏭️ Skipping App (unchanged)"
+  fi
+   IFS='|' read -r oasize odsize oesize omsize oosize <<< "$oldsize"
+   dsize="$(GETSIZE "/data/data/$pkg")"; esize="$(GETSIZE "/data/media/0/Android/data/$pkg")"; msize="$(GETSIZE "/data/media/0/Android/media/$pkg")"; osize="$(GETSIZE "/data/media/0/Android/obb/$pkg")"
+  UID=$(stat -c '%u' "/data/data/$PKG")
+  [ -f "$APP/Data.bundle.pack" ] && { [ "$dsize" != "$odsize" ] && UNBUNDAPP "$APP/Data.bundle.pack" "/data/data" && UNBUNDAPP "$APP/UserDe.bundle.pack" "/data/user_de/0" || DEKH "⏭️ Skipping Data (unchanged)"; }
+  [ -f "$APP/ExtData.bundle.pack" ] && { [ "$esize" != "$oesize" ] && UNBUNDAPP "$APP/ExtData.bundle.pack" "/data/media/0/Android/data" || DEKH "⏭️ Skipping External Data (unchanged)"; }
+  [ -f "$APP/Media.bundle.pack" ] && { [ "$msize" != "$omsize" ] && UNBUNDAPP "$APP/Media.bundle.pack" "/data/media/0/Android/media" || DEKH "⏭️ Skipping Media (unchanged)"; }
+  [ -f "$APP/Obb.bundle.pack" ] && { [ "$osize" != "$oosize" ] && UNBUNDAPP "$APP/Obb.bundle.pack" "/data/media/0/Android/obb" || DEKH "⏭️ Skipping OBB (unchanged)"; }
+   cp -af "$APP/Meta.txt" "$APP/Permissions.txt" "$TMPLOC/$PKG"
+  [ -n "$andid" ] && CHANID "$PKG" "$andid"
+  [ -f "$APP/Permissions.txt" ] && SETPERM "$PKG" "$TMPLOC/$PKG/Permissions.txt"
+  echo "$PKG|$UID" >> "$TMPLOC/.ownerships"
+  DEKH "✅ Restore complete for: $label"
+}
+
+# Fetch and Display All Modules or Apps
+FETCHMODS() {
   mcnt=1
-  DEKH "🚀 Preparing to install the following:" "h"
+  [ -d "$PKGMOD" ] && {
+    ZMODLIST="$(find "$PKGMOD" -type f -name "*.zip")"
+    LSMODLIST="$(find "$PKGMOD" -type f -name "*.apk")"
+  }
+  [ -d "$PKGAPPS" ] && {
+    UAPPSLIST="$(find "$PKGAPPS" -type d -mindepth 1 -maxdepth 1)"
+    APPSLIST="$(find "$PKGAPPS" -type f \( -name "*.apk" -o -name "*.apks" -o -name "*.apkm" \))"
+  }
+  FPMODLIST=""
+  FZMODLIST=""
+  FUAPPSLIST=""
+  FLSMODLIST=""
+  FAPPSLIST=""
   PSSHOWZIP() {
     type="🖇️"
-    unzip -l "$1" | awk '{print $NF}' | grep -q '^lib/' && ADDSTR "$1" "PMODLIST" && type="⚡"
     unzip -l "$1" | grep -q "module.prop" || return
     unzip -p "$1" "module.prop" > "$TMPLOC/module.prop" 2>/dev/null
     [ -s "$TMPLOC/module.prop" ] || return
-    modname=$(PADH name "$TMPLOC/module.prop")
-    modver=$(PADH version "$TMPLOC/module.prop")
-    DEKH "📦 [$mcnt] $modname ($modver) $type"
+    id=$(PADH id "$TMPLOC/module.prop")
+    ver=$(PADH version "$TMPLOC/module.prop")
+    [ -d "$MODDIR/$id" ] && {
+      currver=$(PADH version "$MODDIR/$id/module.prop")
+      [ "$currver" = "$ver" ] && return
+    }
+    label=$(PADH name "$TMPLOC/module.prop"); label=$(SANITIZE "$label")
+    unzip -l "$1" | awk '{print $NF}' | grep -q '^lib/' && ADDSTR "$1:$id:$label:$ver" "FPMODLIST" && type="⚡" || ADDSTR "$1:$id:$label:$ver" "FZMODLIST"
     mcnt=$((mcnt + 1))
     rm -f $TMPLOC/module.prop
   }
+  PSSHOWUAPPS() {
+    pkg="$(basename "$1")"
+    label="$(PADH Name "$1/Meta.txt")"
+    ver="$(PADH Version "$1/Meta.txt")"
+    sizes="$(PADH Size "$1/Meta.txt")"
+    IFS='|' read -r asize dsize esize msize osize <<< "$sizes"
+    size=$((asize + dsize + esize + msize + osize))
+    ADDSTR "$1:$size:$pkg:$label:$ver" "FUAPPSLIST"
+    mcnt=$((mcnt + 1))
+  }
   PSSHOWLSMOD() {
-    info="$("$AAPT" dump badging "$1" 2>/dev/null)"
-    label="$(echo "$info" | grep -m1 "application-label:" | cut -d"'" -f2)"
-    ver="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f4)"
-    DEKH "📦 [$mcnt] $label ($ver) 🧩"
+    unzip -l "$1" | grep -q "xposed_init" 2>/dev/null || return
+    info="$("$PORYGONZ" dump badging "$1" 2>/dev/null)"
+    pkg="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f2)"
+    ver="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f6)"
+    PKG_INSTALLED "$pkg" "$ver" && return 1
+    label="$(echo "$info" | grep -m1 "application-label:" | cut -d"'" -f2)"; label=$(SANITIZE "$label")
+    ADDSTR "$1:$pkg:$label:$ver" "FLSMODLIST"
     mcnt=$((mcnt + 1))
   }
   PSSHOWAPPS() {
-    filename=$(basename "$1")
+    unzip -l "$1" | grep -q "xposed_init" 2>/dev/null && return
+    name=$(basename "$1")
     case "$1" in
       *.apk)
-        info="$("$AAPT" dump badging "$1" 2>/dev/null)" ;;
+        info="$("$PORYGONZ" dump badging "$1" 2>/dev/null)" ;;
       *.apks|*.apkm)
-        mkdir -p "$TMPLOC/$filename"
-        unzip -p "$1" "base.apk" > "$TMPLOC/$filename/base.apk" 2>/dev/null
-        base="$TMPLOC/$filename/base.apk"
-        info="$("$AAPT" dump badging "$base" 2>/dev/null)"
-        rm -rf "$TMPLOC/$filename" ;;
-    esac  
-    label="$(echo "$info" | grep -m1 "application-label:" | cut -d"'" -f2)"
-    ver="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f4)"
-    DEKH "📦 [$mcnt] $label ($ver) 📱"
+        mkdir -p "$TMPLOC/$name"
+        unzip -p "$1" "base.apk" > "$TMPLOC/$name/base.apk" 2>/dev/null
+        base="$TMPLOC/$name/base.apk"
+        info="$("$PORYGONZ" dump badging "$base" 2>/dev/null)"
+        rm -rf "$TMPLOC/$name" ;;
+    esac
+    pkg="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f2)"
+    label="$(echo "$info" | grep -m1 "application-label:" | cut -d"'" -f2)"; label=$(SANITIZE "$label")
+    ver="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f6)"
+    ADDSTR "$1:$name:$pkg:$label:$ver" "FAPPSLIST"
     mcnt=$((mcnt + 1))
   }
-  [ -d "$PKGMOD" ] && {
-  PRSMOD "$ZMODLIST" "PSSHOWZIP"
-  PRSMOD "$LSMODLIST" "PSSHOWLSMOD"
-  }
-  [ -d "$PKGAPPS" ] && PRSMOD "$APPSLIST" "PSSHOWAPPS"
-  DEKH "❓ Do you want to continue with installation?" "h"
-  DEKH "🔊 Vol+ = Yes\n🔉 Vol- = No"
-  OPT
-  [ $? -eq 0 ] || exit 1  
+  [ -n "$ZMODLIST" ] && PRSMOD "$ZMODLIST" "PSSHOWZIP"
+  [ -n "$LSMODLIST" ] && PRSMOD "$LSMODLIST" "PSSHOWLSMOD"
+  [ -n "$APPSLIST" ] && PRSMOD "$APPSLIST" "PSSHOWAPPS"
+  [ -n "$UAPPSLIST" ] && PRSMOD "$UAPPSLIST" "PSSHOWUAPPS"
 }
 
 # Install Modules or Apps
 INSTALL() {
-  mcnt=1
-  cd $TMPLOC
+  mcnt=0
+  cd "$TMPLOC"
   PSZIPMOD() {
-    filename=$(basename "$1")
-    unzip -l "$1" | grep -q "module.prop" || return
-    unzip -p "$1" "module.prop" > "$TMPLOC/module.prop" 2>/dev/null
-    [ -s "$TMPLOC/module.prop" ] || return
-    modid=$(PADH id "$TMPLOC/module.prop")
-    CHKDUP "$modid" "INSTALLED" && return
-    modname=$(PADH name "$TMPLOC/module.prop")
-    modver=$(PADH version "$TMPLOC/module.prop")
-    DEKH "📦 [$mcnt] $modname ($modver) $type" 1 "h*"
-    cp -af "$1" "$TMPLOC/$modid.zip"
-    su -c "$CMD '$TMPLOC/$modid.zip'" 2>/dev/null || DEKH "❌ Failed to install $modname ($modver)" "hx" 1
     mcnt=$((mcnt + 1))
-    ADDSTR "$modid" "INSTALLED"
-    rm -f $TMPLOC/module.prop $TMPLOC/$modid.zip
+    IFS=: read -r path id label ver <<< "$1"
+    DEKH "📦 [$mcnt] $label ($ver) $type" 1 "h*"
+    [ "$INSTYP" = "SELECT" ] && {
+      DEKH "🔊 Vol+ = Install Module\n🔉 Vol- = Skip Module"
+      OPT; [ $? -eq 1 ] && return
+    }
+    cp -af "$path" "$TMPLOC/$id.zip"
+    su -c "$CMD '$TMPLOC/$id.zip'" 2>/dev/null || DEKH "❌ Failed to install $label ($ver)" "hx" 1
+    rm -f $TMPLOC/$id.zip
+  }
+  PSUAPPS() {
+    mcnt=$((mcnt + 1))
+    IFS=: read -r path size pkg label ver <<< "$1"
+    size=$(GETSIZE $size)
+    DEKH "📦 [$mcnt] $label📱" "h*"
+    DEKH "ℹ️ Version: $ver | Size: $size"
+    [ "$INSTYP" = "SELECT" ] && {
+      DEKH "🔊 Vol+ = Install App\n🔉 Vol- = Skip App"
+      OPT; [ $? -eq 1 ] && return
+    }
+    RSTAPP "$pkg" "$path" || DEKH "❌ Failed to install $label" "hx" 1
   }
   PSLSMOD() {
-    filename=$(basename "$1")
-    unzip -l "$1" | grep -q "xposed_init" 2>/dev/null || return
-    info="$("$AAPT" dump badging "$1" 2>/dev/null)"
-    pkg="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f2)"
-    CHKDUP "$pkg" "INSTALLED" && return
-    label="$(echo "$info" | grep -m1 "application-label:" | cut -d"'" -f2)"
-    ver="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f4)"
-    DEKH "📦 [$mcnt] $label ($ver) 🧩" 1 "h*"
-    cp -af "$1" "$TMPLOC/$filename"
-    pm install $filename >/dev/null 2>&1 && DEKH "✅ Installed $label ($ver) 🧩" || DEKH "❌ Failed to install $label ($ver)" "hx" 1
     mcnt=$((mcnt + 1))
-    ADDSTR "$pkg" "INSTALLED"
+    IFS=: read -r path pkg label ver <<< "$1"
+    DEKH "📦 [$mcnt] $label (v$ver) 🧩" 1 "h*"
+    [ "$INSTYP" = "SELECT" ] && {
+      DEKH "🔊 Vol+ = Install LSPosed Module\n🔉 Vol- = Skip Module"
+      OPT; [ $? -eq 1 ] && return
+    }
+    cp -af "$1" "$TMPLOC/$pkg.apk"
+    pm install "$TMPLOC/$pkg.apk" >/dev/null 2>&1 || DEKH "❌ Failed to install $label" "hx" 1
     rm -f $TMPLOC/$pkg.apk
   }
   PSAPPS() {
-    filename=$(basename "$1")
-    unzip -l "$1" | grep -q "xposed_init" 2>/dev/null && return
-    case "$1" in
+    mcnt=$((mcnt + 1))
+    IFS=: read -r path name pkg label ver <<< "$1"
+    DEKH "📦 [$mcnt] $label (v$ver) 📲" 1 "h*"
+    [ "$INSTYP" = "SELECT" ] && {
+      DEKH "🔊 Vol+ = Install LSPosed Module\n🔉 Vol- = Skip Module"
+      OPT; [ $? -eq 1 ] && return
+    }
+    case "$path" in
     *.apk)
-      info="$("$AAPT" dump badging "$1" 2>/dev/null)"
-      pkg="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f2)"
-      CHKDUP "$pkg" "INSTALLED" && return
-      label="$(echo "$info" | grep -m1 "application-label:" | cut -d"'" -f2)"
-      ver="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f4)"
-      DEKH "📦 [$mcnt] $label ($ver) 📱" 1 "h*"
-      cp -af "$1" "$TMPLOC/$filename"
-      pm install $filename >/dev/null 2>&1 && DEKH "✅ Installed $label ($ver) 📱" || DEKH "❌ Failed to install $label ($ver)" "hx" 1
+      cp -af "$path" "$TMPLOC/$pkg.apk"
+      pm install "$pkg.apk" >/dev/null 2>&1 || DEKH "❌ Failed to install $label (v$ver)" "hx" 1
       rm -f $TMPLOC/$pkg.apk
       ;;
     *.apks|*.apkm)
-      unzip -q "$1" -d "$TMPLOC/$filename" 
-      base="$TMPLOC/$filename/base.apk"
-      info="$("$AAPT" dump badging "$base" 2>/dev/null)"
-      pkg="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f2)"
-      CHKDUP "$pkg" "INSTALLED" && return
-      label="$(echo "$info" | grep -m1 "application-label:" | cut -d"'" -f2)"
-      ver="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f4)"
-      DEKH "📦 [$mcnt] $label ($ver) 📱" 1 "h*"
-      apks=$(find "$TMPLOC/$filename" -name "*.apk" | sort)
-      pm install -i '$pkg' $apks >/dev/null 2>&1 && DEKH "✅ Installed $label ($ver) 📱" || DEKH "❌ Failed to install $label ($ver)" "hx" 1
-      rm -f $TMPLOC/$filename
+      apks=$(find "$TMPLOC/$name" -name "*.apk" | sort)
+      pm install $apks >/dev/null 2>&1 || DEKH "❌ Failed to install $label (v$ver)" "hx" 1
+      rm -f $TMPLOC/$name
       ;;
     esac
-    mcnt=$((mcnt + 1))
-    ADDSTR "$pkg" "INSTALLED"
   }
-  [ -d "$PKGMOD" ] && {
-  type="⚡"; PRSMOD "$PMODLIST" "PSZIPMOD"
-  type="🖇️"; PRSMOD "$ZMODLIST" "PSZIPMOD"
-  PRSMOD "$LSMODLIST" "PSLSMOD"
+  START=$(date +%s)
+  [ -n "$FPMODLIST" ] && type="⚡"; PRSMOD "$FPMODLIST" "PSZIPMOD"
+  [ -n "$FZMODLIST" ] && type="🖇️"; PRSMOD "$FZMODLIST" "PSZIPMOD"
+  [ -n "$FUAPPSLIST" ] && {
+   JOBS=$(( $(nproc) / 2 )); JOBS=${JOBS:-4}
+   FUAPPSLIST=$(echo "$FUAPPSLIST" | sort -t: -k2,2nr)
+   PRSMOD "$FUAPPSLIST" "PSUAPPS"
   }
-  [ -d "$PKGAPPS" ] && PRSMOD "$APPSLIST" "PSAPPS"
+  [ -n "$FLSMODLIST" ] && PRSMOD "$FLSMODLIST" "PSLSMOD"
+  [ -n "$FAPPSLIST" ] && PRSMOD "$FAPPSLIST" "PSAPPS"
+  COOLDOWN "1"
+  END=$(date +%s)
+  DURATION=$((END - START))
+  MIN=$((DURATION / 60))
+  SEC=$((DURATION % 60))
+  DEKH "✅ Installation Complete, Everything is Installed" "h"
+  if [ "$MIN" -gt 0 ]; then
+    DEKH "⏱️ Took: ${MIN}m ${SEC}s"
+  else
+    DEKH "⏱️ Took: ${SEC}s"
+  fi
+  FIXOWN
 }
 
 # Restore Modules Data if any
@@ -442,5 +533,6 @@ else
   DEKH "🤖?? Cannot determine rooting implementation, if you think it's a mistake, contact @ShastikXD" "hx"
   exit 1
 fi
+
 # Start Flashing Module
 source "$MODPATH/flash.sh"

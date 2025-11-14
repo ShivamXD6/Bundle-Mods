@@ -8,108 +8,181 @@ DEKH "💻 Architecture - $ARCH"
 DEKH "🎲 Rooting Implementation - $ROOT"
 DEKH "📝 $(PADH "description" "$MODPATH/module.prop")"
 
+# Check for any external media
+if [ -n "$EXTSD" ]; then
+  DEKH "💾 External Storage Found, What to do?" "h"
+  DEKH "🔊 Vol+ = Backup in Internal Storage (fast)\n🔉 Vol- = Backup in $EXTSD (slow)"
+  OPT; [ $? -eq 1 ] && SDDIR="$EXTSD"
+fi
+
+# Backup Storing Method
+DEKH "📦 Choose your Backup Style:" "h"
+DEKH "🔊 Vol+ = Keep folder separate (fast but messy)\n🔉 Vol- = Add into zip pacakge (neat but slow)"
+OPT
+[ $? -eq 0 ] && {
+  BAKMODE="FOLDER"
+  mkdir -p "$SDDIR/#Backup"
+  BAKDIR="$SDDIR/#Backup"
+  PKGMOD="$BAKDIR/MODULES"
+  PKGAPPS="$BAKDIR/APPS"
+  DOWNDIR="$SDDIR/Download"
+  MODDATA="$PKGMOD/DATA"
+  > "$BAKDIR/.bundle-mods"
+  rm -f "$BAKDIR/"*.zip
+}
+
 # Create Base of Module Pack
 DEKH "⚒️ Building Module Package" "h"
-mkdir -p "$PKGDIR/MODULES"
-mkdir -p "$PKGDIR/APPS"
+mkdir -p "$PKGDIR"
 touch "$PKGDIR/flash.sh"
 cp -af "$VTD/META-INF" "$PKGDIR/META-INF"
 cp -af "$VTD/customize.sh" "$PKGDIR/customize.sh"
 cp -af "$VTD/bundle" "$PKGDIR/load"
 cp -af "$VTD/porygonz" "$PKGDIR/porygonz"
+cp -af "$VTD/snorlax" "$PKGDIR/snorlax"
 cp -af "$VTD/zapdos" "$PKGDIR/zapdos"
 cp -af "$VTD/module.prop" "$PKGDIR/module.prop"
+cp -af "$VTD/service.sh" "$PKGDIR/service.sh"
 
 cat > "$PKGDIR/flash.sh" << 'FINISH'
+#!/system/bin/sh
 # Module Info UI
 DEKH "$(PADH "name" "$MODPATH/module.prop")" "h#" 1
-DEKH "🗃️ Powered By Bundle Mods v2"
+DEKH "🗃️ Powered By Bundle Mods v4"
 DEKH "🌟 Packed By $(PADH "author" "$MODPATH/module.prop")"
 DEKH "⚡ Version - $(PADH "version" "$MODPATH/module.prop")"
 DEKH "🎲 Rooting Implementation - $ROOT"
-DEKH "📝 $(PADH "description" "$MODPATH/module.prop")"
-DEKH "✅ Validating your Modules.. Please Wait..."
-SHOWMODS
 
 # Check for any pre installation script 
 if [ -f "$MODPATH/Pre-Install.sh" ]; then
   DEKH "📃 Found Pre-Install script in pack. Executing..." 1
   source "$MODPATH/Pre-Install.sh"
-elif [ -f "$DOWNDIR/Pre-Install.sh" ]; then
-  DEKH "📃 Found Pre-Install script in Download. Executing..." 1
-  source "$DOWNDIR/Pre-Install.sh"
+elif [ -f "$BAKDIR/Pre-Install.sh" ]; then
+  DEKH "📃 Found Pre-Install script in $BAKDIR. Executing..." 1
+  source "$BAKDIR/Pre-Install.sh"
 fi
 
+# Check for Backup Mode
+[ ! -d "$PKGMOD" ] && [ ! -d "$PKGAPPS" ] && BAKMODE="FOLDER"
+[ "$BAKMODE" = "FOLDER" ] && {
+  DEKH "🔎 Looking for Backups" "h"
+  BAKDIR="$SDDIR/#Backup"
+  [ ! -d "$BAKDIR" ] && BAKDIR="$(dirname "$(find "$SDDIR" -maxdepth 2 -type f -name '.bundle-mods' | head -n 1)")"; [ "$BAKDIR" = "." ] && unset BAKDIR
+  [ -n "$EXTSD" ] && {
+    BAKEXT="$EXTSD/#Backup"
+    [ ! -d "$BAKEXT" ] && BAKEXT="$(dirname "$(find "$EXTSD" -maxdepth 2 -type f -name '.bundle-mods' | head -n 1)")"; [ "$BAKEXT" = "." ] && unset BAKEXT
+  }
+  
+  [ ! -d "$BAKDIR" ] && [ ! -d "$BAKEXT" ] && DEKH "❌ Can't find anything to install" "hx" && exit 1
+
+  # Check if backup exists in both storage
+  [ -d "$BAKDIR" ] && [ -d "$BAKEXT" ] && {
+    DEKH "💾 Select a Backup Location to Restore from?" "h"
+    DEKH "🔊 Vol+ = Restore from Internal Storage (fast)\n🔉 Vol- = Restore from $EXTSD (slow)"
+    OPT; [ $? -eq 1 ] && {
+      BAKDIR="$BAKEXT"
+    }
+  }
+  
+  # Update Vars for Backup Mode Folder
+  PKGMOD="$BAKDIR/MODULES"
+  PKGAPPS="$BAKDIR/APPS"
+  MODDATA="$PKGMOD/DATA"
+}
+
+# Installation Type Quick or Selective
+DEKH "⏬ Select Installation Type?" "h"
+DEKH "🔊 Vol+ = Quick Install (install all)\n🔉 Vol- = Selective Install (select & install)"
+OPT; [ $? -eq 1 ] && {
+  INSTYP="SELECT"
+}
+
+DEKH "✅ Validating your Mods/Apps..." "h"
+FETCHMODS
+
 # Install Modules
-DEKH "⏬ Installing Modules" "h"
+DEKH "⏬ Installing Mods/Apps" "h"
 INSTALL
+
+# Restore Data
+RSTDATA
 
 # Check for any post installation script 
 if [ -f "$MODPATH/Post-Install.sh" ]; then
   DEKH "📃 Found Post-Install script in pack. Executing..." 1
   source "$MODPATH/Post-Install.sh"
-elif [ -f "$DOWNDIR/Post-Install.sh" ]; then
-  DEKH "📃 Found Post-Install script in Download. Executing..." 1
-  source "$DOWNDIR/Post-Install.sh"
+elif [ -f "$BAKDIR/Post-Install.sh" ]; then
+  DEKH "📃 Found Post-Install script in $BAKDIR. Executing..." 1
+  source "$BAKDIR/Post-Install.sh"
 fi
 
-# Restore Data
-RSTDATA
-
-DEKH "🔗 Do you want to join @BuildBytes for more stuffs like that?" "h#" 1
-DEKH "🔊 Vol+ = Yes\n🔉 Vol- = No\n"
+# Prompt to join Channel
+DEKH "🔗 @BuildBytes is quietly building things worth exploring. Want to be there early?" "h#" 1
+DEKH "🔊 Vol+ = Yes, I’m in. early, curious, and ahead\n🔉 Vol- = No, I’ll scroll past and miss it\n"
 OPT
 if [ $? -ne 1 ]; then
   am start -a android.intent.action.VIEW -d https://telegram.me/BuildBytes >/dev/null 2>&1
 else
-  DEKH "😔 It's okay... not everyone recognizes brilliance.\nI’ll just sit here, unloved, like a flawless script ignored by a clueless user."
+  DEKH "🫥 You passed.\nNo noise, no regret, just a silent skip over something built with intent.\nI’ll stay here, quietly excellent, waiting for those who notice before it’s popular."
 fi
 DEKH "📦 Everything from Pack Installed Successfully" "h"
+wait
 
 # Remove Bundle-Pack
 (
-sleep 0.1
-rm -rf "$MODPATH"
-rm -rf "$MODDIR/bundle-mods"
+sleep 0.2
+rm -rf "$MODPATH" "$MODDIR/bundle-mods" 
 )&
 FINISH
 
-# Select Method you want to use for selection
-DEKH "🧠 How You Want to Select Modules:" "h"
-DEKH "🔊 Vol+ = Delete Placeholder files to Select\n🔉 Vol- = Use Volume Keys to Select"
+# Selection Method
+DEKH "☑️ Choose your Select Style:" "h"
+DEKH "🔊 Vol+ = Delete temp. files to Select (fast)\n🔉 Vol- = Use Volume Keys to Select (slow)"
 OPT
 [ $? -eq 0 ] && SELMODE="FILE"
 
 # Add Local Modules
 LOCAL() {
+  mkdir -p "$PKGMOD"
   DEKH "👀 Looking for Local Modules 🖇️" "h"
-  DEKH "🔎 Deep Scanning in:$SDDIR"
+  DEKH "🔎 Deep Scanning in $SDDIR" 
   LOCMOD 
+  return 0
+}
+
+# Add Installed / User Apps
+UAPPS() {
+  mkdir -p "$PKGAPPS"
+  DEKH "👀 Looking for Installed Apps 📱" "h"
+  INSAPPS
   return 0
 }
 
 # Add LSPOSED Modules
 LSPOSED() {
+  mkdir -p "$PKGMOD"
   DEKH "👀 Looking for Local LSPosed Modules 🧩" "h"
-  DEKH "🔎 Deep Scanning in:$SDDIR"
+  DEKH "🔎 Deep Scanning in $SDDIR"
   LSMOD
   return 0
 }
 
 # Add Local Apps
 APPS() {
+  mkdir -p "$PKGAPPS"
   DEKH "👀 Looking for Local Apps 📱" "h"
-  DEKH "🔎 Deep Scanning in:$SDDIR"
+  DEKH "🔎 Deep Scanning in $SDDIR"
   LOCAPPS 
   return 0
 }
 
 # Let them select what they want to bundle
-BUNDLE_KEYS=("Local Modules" "LSPosed Modules" "Local Apps" "Finish Bundling")
+BUNDLE_KEYS=("Local Modules" "Installed Apps" "LSPosed Modules" "Local Apps" "Finish Bundling")
 
 BUNDLE_FUNCS() {
   case "$1" in
     "Local Modules") LOCAL ;;
+    "Installed Apps") UAPPS ;;
     "LSPosed Modules") LSPOSED ;;
     "Local Apps") APPS ;;
     "Finish Bundling") return 1 ;;
@@ -123,10 +196,11 @@ while true; do
   for i in "${!BUNDLE_KEYS[@]}"; do
     label="${BUNDLE_KEYS[i]}"
     case "$i" in
-      0) DEKH "🔊 Vol+ = $label"; keymap[0]="$label" ;;
-      1) DEKH "🔉 Vol- = $label"; keymap[1]="$label" ;;
+      0) DEKH "🔊 Vol+ Press = $label"; keymap[0]="$label" ;;
+      1) DEKH "🔉 Vol- Press = $label"; keymap[1]="$label" ;;
       2) DEKH "🔊 Vol+ Hold = $label"; keymap[10]="$label" ;;
       3) DEKH "🔊 Vol- Hold = $label"; keymap[11]="$label" ;;
+      4) DEKH "🔌 Power Button Press/Hold = $label"; keymap[2]="$label"; keymap[12]="$label";;
     esac
   done
   OPT "h"
@@ -141,18 +215,17 @@ while true; do
 done
 
 # Check if the user is Chhota Bheem
-ADDCNT=$(CNTMODS "ADDED")
-SKPCNT=$(CNTMODS "SKIPPED")
+ADDCNT=$(CNTSTR "ADDED")
+SKPCNT=$(CNTSTR "SKIPPED")
 
 # Example 1:
-[ "$ADDCNT" -eq 0 ] && DEKH "🤡 This bundle/pack is as empty as your love life." "hx" 1 && exit 10
+[ "$ADDCNT" -eq 0 ] && DEKH "🤡 This bundle pack is as empty as your love life." "hx" && exit 10
 
 # Check for Modules data if is there any to backup
-DEKH "💾 Searching for Modules Data" "h" 1
-BAKDATA
+[ -d "$PKGMOD" ] && DEKH "💾 Searching for Modules Data" "h" && BAKDATA
 
 # Example 2:
-[ "$ADDCNT" -le 2 ] && DEKH "🫥 Your bundle/pack has less content than your last relationship." "h" 1
+[ "$ADDCNT" -le 2 ] && DEKH "🫥 Your bundle/pack has less content than your last relationship." "h"
 
 # Calculate Percentage
 TOTALCNT=$((SKPCNT + ADDCNT))
@@ -160,49 +233,57 @@ ADDPRCN=$((ADDCNT * 100 / TOTALCNT))
 SKIPPRCN=$((SKPCNT * 100 / TOTALCNT))
 
 # Example 3:
-[ "$SKIPPRCN" -ge 90 ] && DEKH "😔 Looks like you have Commitment issues." "h" 1
+[ "$SKIPPRCN" -ge 90 ] && DEKH "😔 Looks like you have Commitment issues." "h"
 
 # Customize Module Name and Author
 DEKH "🎨 Do you want to change the bundle/pack name and author?" "h" 1
-DEKH "🔊 Vol+ = Yes\n🔉 Vol- = No"
+DEKH "🔊 Vol+ = Yes\n🔉 Vol- = No" 0.5
 OPT
 if [ $? -eq 0 ]; then
-  DEKH "\nℹ️ Follow Instructions :-\n- Rename below files:\n- '$NAMEPH'\n- '$AUTHORPH'\n➡️ in $DOWNDIR" 3
-  am start -a android.intent.action.VIEW -d content://com.android.externalstorage.documents/document/primary:Download >> /dev/null;
-  touch "$DOWNDIR/$NAMEPH"
-  CUSNAME=$(CRENAME "$DOWNDIR" "$NAMEPH") || CUSNAME="🧰 Modules Pack - $(getprop ro.product.model) - $(RAND)"
+  DEKH "\nℹ️ Follow Instructions :-\n- Rename below files:\n- '$NAMEPH'\n- '$AUTHORPH'\n- '$VERSIONPH'\n📂 in $RNMDIR\n" 3
+  mkdir -p "$RNMDIR"; OFM "$RNMFLD"
+  touch "$RNMDIR/$NAMEPH"
+  CUSNAME="$(CRENAME "$RNMDIR" "$NAMEPH")" || CUSNAME="🧰 Modules or Apps Package - $(getprop ro.product.model)"
   DEKH "✅ Pack Name set to: $CUSNAME"
-  touch "$DOWNDIR/$AUTHORPH"
-  CUSAUTHOR=$(CRENAME "$DOWNDIR" "$AUTHORPH") || CUSAUTHOR="Unknown"
+  touch "$RNMDIR/$AUTHORPH"
+  CUSAUTHOR="$(CRENAME "$RNMDIR" "$AUTHORPH")" || CUSAUTHOR="Unknown"
   DEKH "✅ Pack Author set to: $CUSAUTHOR"
-  am force-stop com.android.documentsui
-  am force-stop com.google.android.documentsui 
-  sleep 1
+  touch "$RNMDIR/$VERSIONPH"
+  CUSVERSION="$(CRENAME "$RNMDIR" "$VERSIONPH")" || CUSVERSION="v4 ($NOW)"
+  DEKH "✅ Pack Version set to: $CUSVERSION"
+  CFM; rm -rf "$RNMDIR"; sleep 1
 else
-  CUSNAME="🧰 Modules Pack - $(getprop ro.product.model) - $(RAND)"
+  CUSNAME="🧰 Modules or Apps Package - $(getprop ro.product.model)"
   CUSAUTHOR="Unknown"
-  DEKH "✅ Using Default Values: \n$CUSNAME by $CUSAUTHOR"
+  CUSVERSION="v4 ($NOW)"
+  DEKH "✅ Using Default Values: \n$CUSNAME [$CUSVERSION] by $CUSAUTHOR"
 fi
 
 # Modify Module Prop
 SET name "$CUSNAME" "$PKGDIR/module.prop"
 SET author "$CUSAUTHOR" "$PKGDIR/module.prop"
 SET description "Packed $ADDCNT Mods/Apps in $(getprop ro.product.model), (A$(getprop ro.build.version.release))" "$PKGDIR/module.prop"
-SET version "$(PADH "version" "$MODPATH/module.prop") [$NOW]" "$PKGDIR/module.prop"
+SET version "$CUSVERSION" "$PKGDIR/module.prop"
 
 # Bundle Pack
-DEKH "🗜️ Compressing your Bundle Pack." "h"
-PACKFILE="$DOWNDIR/$CUSNAME.zip"
+DEKH "✅ Finalizing your Bundle Pack." "h"
+if [ "$BAKMODE" = "FOLDER" ]; then
+  PACKFILE="$SDDIR/#Backup/$CUSNAME.zip"
+  cmp=""
+else
+  PACKFILE="$DOWNDIR/$CUSNAME.zip"
+  cmp="-0"
+fi
 cd "$PKGDIR"
-$SNORLAX -0 -qr "$PACKFILE" .
+$SNORLAX $cmp -qr "$PACKFILE" .
 
-DEKH "🔗 Do you want to join @BuildBytes for more stuffs like that?" "h#" 1
-DEKH "🔊 Vol+ = Yes\n🔉 Vol- = No\n"
+DEKH "🔗 @BuildBytes is quietly building things worth exploring. Want to be there early?" "h#" 1
+DEKH "🔊 Vol+ = Yes, I’m in. early, curious, and ahead\n🔉 Vol- = No, I’ll scroll past and miss it\n"
 OPT
 if [ $? -ne 1 ]; then
   am start -a android.intent.action.VIEW -d https://telegram.me/BuildBytes >/dev/null 2>&1
 else
-  DEKH "😔 It's okay... not everyone recognizes brilliance.\nI’ll just sit here, unloved, like a flawless script ignored by a clueless user."
+  DEKH "🫥 You passed.\nNo noise, no regret, just a silent skip over something built with intent.\nI’ll stay here, quietly excellent, waiting for those who notice before it’s popular."
 fi
 
 # Finalised and Cleanup
@@ -210,12 +291,11 @@ DEKH "📦 Your Bundled Pack is Ready" "h"
 DEKH "📊 Summary:" "h"
 DEKH "✅ Mods/Apps Added: $ADDCNT (~$ADDPRCN%)"
 DEKH "⏩ Mods/Apps Skipped: $SKPCNT (~$SKIPPRCN%)"
-DEKH "📁 Output File: $PACKFILE"
+DEKH "👇 FLASH BELOW ZIP TO RESTORE 👇" "h#" 1
+DEKH "📁 - $PACKFILE\n"
 
 # Remove Bundle-Mods
 (
-sleep 0.1
-rm -rf "$MODPATH"
-rm -rf "$MODDIR/bundle-mods"
-rm -rf "$VTD"
+sleep 0.2
+rm -rf "$MODPATH" "$MODDIR/bundle-mods" "$VTD"
 )&

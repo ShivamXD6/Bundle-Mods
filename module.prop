@@ -1,6 +1,6 @@
 id=bundle-mods
 name=🗃️ Bundle Mods
-version=v2
-versionCode=20
-author=@BuildBytes (@ShastikXD)
-description=Bundle all your modules in a Single Zip.
+version=v4
+versionCode=40
+author=@BuildBytes
+description=Bundle all your modules or apps in a Single Zip or into a separate folder for batch installation.
