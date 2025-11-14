@@ -617,17 +617,20 @@ fi
 source "$PKGDIR/data.sh"
 for i in "${!MOD_ID_PKG[@]}"; do
   id="${MOD_ID_PKG[$i]}"
-  CHKDUP "$id" "ADDED" && continue
+  if [ -f "$PKGMOD/$id".* ]; then
     name=$(PADH name "$MODDIR/$id/module.prop" 2>/dev/null)
-    name=${name:-$id}
-    DEKH "${MOD_DATA[$i]}" | while IFS= read -r file; do
+    [ -z "$name" ] && {
+      apk=$(pm path "$id" | sed 's/^package://' | head -1)
+      name=$(SANITIZE "$( "$PORYGONZ" dump badging "$apk" 2>/dev/null | grep -m1 "application-label:" | cut -d"'" -f2 )")
+    }
+    echo "${MOD_DATA[$i]}" | while IFS= read -r file; do
       if [ -f "$file" ]; then
         filename=$(basename "$file")
         DEKH "💾 Backing up: $name, 💿 Data: $filename"
         BAK "$file" "$MODDATA/$id"
-        ADDSTR "$id" "ADDED"
       fi
     done
+  fi
 done
 }
 
