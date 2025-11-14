@@ -106,23 +106,23 @@ unzip() {
 }
 
 # Count Strings from Registry
-CNTMODS() {
-  eval "printf '%s\n' \"\${$1}\"" | grep -c '.'
-}
+CNTSTR() { [ -f "$1" ] && sort -u "$1" | grep -c . || eval "printf '%s\n' \"\${$1}\"" | grep -c .; }
 
 # Add Strings in Registry
 ADDSTR() {
+  [ -f "$2" ] && { echo "$1" >> "$2"; sort -u "$2" -o "$2"; } ||
   eval "$2=\${$2:+\${$2}\$'\n'}\$1"
+}
+
+# Remove Strings from Registry
+DELSTR() {
+  [ -f "$2" ] && awk -v str="$1" '$0 != str' "$2" > "$2.tmp" && mv "$2.tmp" "$2" ||
+  eval "$2=\$(printf '%s\n' \"\${$2}\" | grep -Fxv -- \"\$1\")"
 }
 
 # Check for Duplicate Strings in Registry
 CHKDUP() {
   eval "printf '%s\n' \"\${$2}\"" | grep -Fxq -- "$1"
-}
-
-# Remove Strings from Registry
-DELSTR() {
-  eval "$2=\$(printf '%s\n' \"\${$2}\" | grep -Fxv -- \"\$1\")"
 }
 
 # Replace Symbols and Spaces with Underspace
