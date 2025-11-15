@@ -1,30 +1,47 @@
 # 🗃️ Bundle-Mods
-> A simple tool that lets you bundle all your magisk or lsposed modules or even your apps into one neat pack, set a custom name and author, and much more, perfect for carrying your favorite modules without carrying multiple files.
+> A simple tool that lets you bundle all your magisk or lsposed modules or even your local apps or user apps (with parts like Swift Backup) into one neat pack or in a separate folder, set a custom name, author, version, and much more, perfect for carrying your favorite modules or apps without carrying multiple files.
 
 ![Downloads](https://img.shields.io/github/downloads/ShivamXD6/Bundle-Mods/total?color=green&style=for-the-badge)
 ![Release](https://img.shields.io/github/v/release/ShivamXD6/Bundle-Mods?style=for-the-badge)
+[![Join Build Bytes](https://img.shields.io/badge/Join-Build%20Bytes-2CA5E0?style=for-the-badge&logo=telegram)](https://telegram.me/BuildBytes)
+[![Join Chat](https://img.shields.io/badge/Join%20Chat-Build%20Bytes%20Discussion-2CA5E0?style=for-the-badge&logo=telegram)](https://telegram.me/BuildBytesDiscussion)
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
-![Magisk](https://img.shields.io/badge/Magisk-8A2BE2?style=for-the-badge&logo=magisk&logoColor=white)
 ![Root](https://img.shields.io/badge/Root-ff0000?style=for-the-badge&logo=superuser&logoColor=white)
+![Magisk](https://img.shields.io/badge/Magisk-8A2BE2?style=for-the-badge&logo=magisk&logoColor=white)
+![KernelSU](https://img.shields.io/badge/KernelSU-000000?style=for-the-badge&logo=linux&logoColor=white)
+![APatch](https://img.shields.io/badge/APatch-FF6B00?style=for-the-badge&logo=android&logoColor=white)
 
 ## ❔ What it does:
 - 🧳 Combines all your `.zip` modules or app files (`.apk`, `.apks`, `.apkm`) into a single pack.
+- 📱 Additionally Include User Apps with their parts/data much faster then Swift Backup or other Data Backup Apps.
 - 🧩 Add **LSPosed modules** and other supported modules to the same pack.
 - 🗂️ Optionally it includes **backup & restore data** for certain modules (e.g., ReVanced settings, Tricky Store).
 - ⚙️ Add a **custom installation script** to run before or after pack installation.
-- 🏷️ Rename the final pack to set a custom name and author (by renaming the files).
-- ✂️ **Modules selection method:** just delete placeholders to select those modules easily.
+- 🏷️ Rename the final pack to set a custom name, version and author (by renaming the files).
+- ✂️ **Selection method:** just delete placeholders to select those modules or apps easily.
 - 🎮 Control installation with **volume buttons**.
 - 🛠️ Supports: Magisk, KernelSU, APatch, and their forks.
 
 ## 📖 Documentation
 <details>
   <summary>📖 Everything about the Module (click here to view) </summary>
+  
+  ## SD Card Support?
+  - Yes, it supports sdcard you will prompt to select for backup or restore, if there's any sdcard exist.
+  
+  ## Backup Styles:
+  - **Separate Folder** - Faster, no Compression or extraction but less portability, messy many files.
+  - **Zip Package** - Slower, because of compression and extraction but better portability, neat 1 file.
+  
+  ## Selection Styles:
+  - Delete temporary Files or placeholders to select modules or apps in `Delete_To_Select` folder.
+  - Use Volume Keys to Select, (not much advanced or fast)
 
-  ## Everything it can pack
+  ## What it can backup?
   - Magsik or ZIP modules [Emojis: 🔗⚡]
+  - User Apps (with Data) [Emoji: 📱]
   - LSPosed Modules [Emoji: 🧩]
-  - Local Apps (supports: apk,apks,apkm) [Emoji: 📱]
+  - Local Apps (supports: apk,apks,apkm) [Emoji: 📲]
 
   ## Prioritize Some ZIP Modules
   Some modules must be installed before others to avoid issues.
@@ -33,73 +50,31 @@
 
   ## Backup Restore modules data
   - It backups or restores data from the respective paths from the data.sh.
-   
+  
+  ## User Apps
+  
+  ### Why it's faster then apps like Swift Backup?
+  - It uses ZAPDOS (zstd) with tar as it's compressing binary, which is much faster then zip or other binaries.
+  - For Batch backup or installation, it uses Parallel Processing with Decreasing order of Apps sizes.
+  - Also for Batch apps installation, it install app and runs optimization for that particular app in Background, meanwhile it install the next app which saves time.
+  
+  ### What it backup?
+  - `#App` - App (including splits)
+  - `#Data` - Data (from /data/data)
+  - `#UserDe` (included with data default) - User Direct Encryption (from /data/user_de)
+  - `#ExtData` - External Data (from /Internal Storage/Android/data)
+  - `#Media` - Media (from /Internal Storage/Android/media)
+  - `#Obb` - OBB (from /Internal Storage/Android/obb)
+  - `Granted Permissions` by default backup.
+  - `#PermAll` - All Supported Permissions (not only granted one)
+  - `#AndroidID` - SSAID (from /data/system/users/0/settings_ssaid.xml)
+
   ## Pre-Install and Post-Install Scripts
-  You can add your own custom installation scripts either when bundling or by placing them in: ``/Internal Storage/Download/``
+  You can add your own custom installation scripts either when bundling or by placing them in: ``/Internal Storage/#Backup/``
   They will be automatically executed if named:
   **Pre-Install.sh** → Runs before installing modules
   **Post-Install.sh** → Runs after installing modules
-  ### Below are some examples 👇
-  ### 🔹 Pre-Install Script Examples:
-  
-  **1. Skip/Remove Certain Modules Before Install**
-  ```sh
-  #!/system/bin/sh
-  # Example Pre-Install script
-  # Use this to prevent some modules from being installed.
 
-  DEKH "⚡ Running Pre-Install checks..." "h" # "h" represents heading with random borders
-
-  # Suppose you don’t want 'youtube-revanced' module
-  SKIPPED="youtube-revanced $SKIPPED" # or you can use func, ADDSTR "youtube-revanced" "$SKIPPED"
-
-  # Or dynamically skip based on condition
-  if getprop ro.build.version.release | grep -q "14"; then
-    DEKH "⛔ Skipping youtube-revanced on Android 14"
-    SKIPPED="youtube-revanced $SKIPPED"
-  fi
-```
-**2. Prompt User to Choose Removal**
-```sh
-#!/system/bin/sh
-# Interactive Pre-Install using Volume Keys
-
-DEKH "🤔 Do you want to skip installing LSPosed?" "h*" # "h*" represents heading with ***** borders
-DEKH "🔊 Vol+ = Yes, Skip\n🔉 Vol- = No, Install"
-
-OPT
-if [ $? -eq 0 ]; then
-  SKIPPED="lsposed $SKIPPED"
-  DEKH "✅ LSPosed skipped."
-else
-  DEKH "📥 LSPosed will be installed."
-fi
-```
-### 🔹 Post-Install Script Examples
-**1. Restore Modules Config**
-```sh
-#!/system/bin/sh
-# Restore configs after installation
-
-DEKH "🔁 Restoring modules config..." "h"
-RSTDATA # It will run automatically by main script btw.
-DEKH "✅ All configs restored."
-```
-**2. Post-Install Safety Check**
-```sh
-#!/system/bin/sh
-# Verify if all important modules installed
-
-IMPORTANT=("lsposed" "zygisk-detach" "riru")
-
-for mod in "${IMPORTANT[@]}"; do
-  if [ ! -d "$MODDIR/$mod" ]; then
-    DEKH "❌ $mod missing after install!" "hx"
-  else
-    DEKH "✅ $mod is installed." "h"
-  fi
-done
-```
 </details>
 
 ## 📥 Installation Guide
