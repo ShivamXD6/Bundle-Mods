@@ -28,6 +28,9 @@
   
   ## SD Card Support?
   - Yes, it supports sdcard you will prompt to select for backup or restore, if there's any sdcard exist.
+
+  ## Can I rename #Backup folder to something else?
+  - Yes you can, just keep `.bundle-mods` file in it to check later if it's a backup folder or not.
   
   ## Backup Styles:
   - **Separate Folder** - Faster, no Compression or extraction but less portability, messy many files.
@@ -57,6 +60,7 @@
   - It uses ZAPDOS (zstd) with tar as it's compressing binary, which is much faster then zip or other binaries.
   - For Batch backup or installation, it uses Parallel Processing with Decreasing order of Apps sizes.
   - Also for Batch apps installation, it install app and runs optimization for that particular app in Background, meanwhile it install the next app which saves time.
+  - [Click to Check the Comparison Between Swift Backup and Bundle Mods Here](https://telegram.me/buildbytes/142)
   
   ### What it backup?
   - `#App` - App (including splits)
