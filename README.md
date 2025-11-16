@@ -55,6 +55,10 @@
   - It backups or restores data from the respective paths from the data.sh.
   
   ## User Apps
+
+  ### Selection Method for Components/Parts of Apps
+  - If you select app only, and delete it's temporary/placeholder file, it will auto select available parts (except Android ID or All Permissions)
+  - For selecting specific parts, select parts and apps (which you want to backup for the apps)
   
   ### Why it's faster then apps like Swift Backup?
   - It uses ZAPDOS (zstd) with tar as it's compressing binary, which is much faster then zip or other binaries.
