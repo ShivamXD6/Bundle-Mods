@@ -23,9 +23,7 @@
 - 🛠️ Supports: Magisk, KernelSU, APatch, and their forks.
 
 ## 📖 Documentation
-<details>
-  <summary>📖 Everything about the Module (click here to view) </summary>
-  
+
   ## SD Card Support?
   - Yes, it supports sdcard you will prompt to select for backup or restore, if there's any sdcard exist.
 
@@ -80,10 +78,10 @@
   ## Pre-Install and Post-Install Scripts
   You can add your own custom installation scripts either when bundling or by placing them in: ``/Internal Storage/#Backup/``
   They will be automatically executed if named:
+  
   **Pre-Install.sh** → Runs before installing modules
+  
   **Post-Install.sh** → Runs after installing modules
-
-</details>
 
 ## 📥 Installation Guide
 
