@@ -1,8 +1,8 @@
 # 🗃️ Bundle-Mods
 > A simple tool that lets you bundle all your magisk or lsposed modules or even your local apps or user apps (with parts like Swift Backup) into one neat pack or in a separate folder, set a custom name, author, version, and much more, perfect for carrying your favorite modules or apps without carrying multiple files.
 
-![Downloads](https://img.shields.io/github/downloads/ShivamXD6/Bundle-Mods/total?color=green&style=for-the-badge)
-![Release](https://img.shields.io/github/v/release/ShivamXD6/Bundle-Mods?style=for-the-badge)
+[![Downloads](https://img.shields.io/github/downloads/ShivamXD6/Bundle-Mods/total?color=green&style=for-the-badge)](https://github.com/ShivamXD6/Bundle-Mods/releases/latest)
+[![Release](https://img.shields.io/github/v/release/ShivamXD6/Bundle-Mods?style=for-the-badge)](https://github.com/ShivamXD6/Bundle-Mods/releases/latest)
 [![Join Build Bytes](https://img.shields.io/badge/Join-Build%20Bytes-2CA5E0?style=for-the-badge&logo=telegram)](https://telegram.me/BuildBytes)
 [![Join Chat](https://img.shields.io/badge/Join%20Chat-Build%20Bytes%20Discussion-2CA5E0?style=for-the-badge&logo=telegram)](https://telegram.me/BuildBytesDiscussion)
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
