@@ -76,12 +76,12 @@
   - `#AndroidID` - SSAID (from /data/system/users/0/settings_ssaid.xml)
 
   ## Pre-Install and Post-Install Scripts
-  You can add your own custom installation scripts either when bundling or by placing them in: ``/Internal Storage/#Backup/``
+  You can add your own custom installation scripts either in zip file directly or by placing them in: ``/Internal Storage/#Backup/``
   They will be automatically executed if named:
   
-  **Pre-Install.sh** → Runs before installing modules
+  **Pre-Install.sh** → Runs before installation of modules or apps.
   
-  **Post-Install.sh** → Runs after installing modules
+  **Post-Install.sh** → Runs after installation of modules or apps.
 
 ## 📥 Installation Guide
 
