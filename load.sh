@@ -292,7 +292,7 @@ PRSMOD() {
   in="$1"; fn="$2"
   rd() { while IFS= read -r l || [ -n "$l" ]; do
            [ -n "$l" ] && "$fn" "$l"
-           [ "$Key" = 2 ] || [ "$Key" = 12 ] && break
+           [ "$Key" = 2 ] || [ "$Key" = 12 ] && return
          done; }
   [ -f "$in" ] && rd <"$in" || rd <<EOF
 $in
@@ -541,8 +541,8 @@ LOCMOD() {
     CHKDUP "$id-$ver" "SKIPPED" && return  
     DEKH "📦 [$MCNT] - $name ($ver) 🔗" "h*"
     DEKH "🔊 Vol+ = Add Module in Bundle\n🔉 Vol- = Skip Module"
-    OPT
-    if [ $? -eq 0 ]; then
+    OPT "h"; Key=$?
+    if [ "$Key" -eq 0 ]; then
       cp -af "$module" "$PKGMOD/$id.zip"
       ADDSTR "$id" "ADDED"
       DEKH "📥 Added: $name ($ver) 🔗"
@@ -704,8 +704,8 @@ LSMOD() {
       CHKDUP "$pkg-$ver" "SKIPPED" && return
       DEKH "📦 [$MCNT] - $label ($ver) 🧩" "h*"
       DEKH "🔊 Vol+ = Add LSPosed Module in Bundle\n🔉 Vol- = Skip Module"
-      OPT
-      if [ $? -eq 0 ]; then
+      OPT "h"; Key=$?
+      if [ "$Key" -eq 0 ]; then
         cp -af "$apk" "$PKGMOD/$pkg.apk"
         ADDSTR "$pkg" "ADDED"
         DEKH "📥 Added: $label ($ver) 🧩"
@@ -766,8 +766,8 @@ LOCAPPS() {
       CHKDUP "$pkg-$ver" "SKIPPED" && return
       DEKH "📦 [$MCNT] - $label ($ver) 📲" "h*"
       DEKH "🔊 Vol+ = Add App in Bundle\n🔉 Vol- = Skip App"
-      OPT
-      if [ $? -eq 0 ]; then
+      OPT "h"; Key=$?
+      if [ "$Key" -eq 0 ]; then
         ext="${app##*.}"
         cp -af "$app" "$PKGAPPS/$pkg.$ext"
         ADDSTR "$pkg" "ADDED"

@@ -260,7 +260,7 @@ PRSMOD() {
   in="$1"; fn="$2"
   rd() { while IFS= read -r l || [ -n "$l" ]; do
            [ -n "$l" ] && "$fn" "$l"
-           [ "$Key" = 2 ] || [ "$Key" = 12 ] && break
+           [ "$Key" = 2 ] || [ "$Key" = 12 ] && return
          done; }
   [ -f "$in" ] && rd <"$in" || rd <<EOF
 $in
@@ -416,7 +416,7 @@ INSTALL() {
     DEKH "📦 [$mcnt] $label ($ver) $type" 1 "h*"
     [ "$INSTYP" = "SELECT" ] && {
       DEKH "🔊 Vol+ = Install Module\n🔉 Vol- = Skip Module"
-      OPT; [ $? -eq 1 ] && return
+      OPT "h"; Key=$?; [ "$Key" -eq 1 ] && return
     }
     cp -af "$path" "$TMPLOC/$id.zip"
     su -c "$CMD '$TMPLOC/$id.zip'" 2>/dev/null || DEKH "❌ Failed to install $label ($ver)" "hx" 1
@@ -430,7 +430,7 @@ INSTALL() {
     DEKH "ℹ️ Version: $ver | Size: $size"
     [ "$INSTYP" = "SELECT" ] && {
       DEKH "🔊 Vol+ = Install App\n🔉 Vol- = Skip App"
-      OPT; [ $? -eq 1 ] && return
+      OPT "h"; Key=$?; [ "$Key" -eq 1 ] && return
     }
     RSTAPP "$pkg" "$path" || DEKH "❌ Failed to install $label" "hx" 1
   }
@@ -440,7 +440,7 @@ INSTALL() {
     DEKH "📦 [$mcnt] $label (v$ver) 🧩" 1 "h*"
     [ "$INSTYP" = "SELECT" ] && {
       DEKH "🔊 Vol+ = Install LSPosed Module\n🔉 Vol- = Skip Module"
-      OPT; [ $? -eq 1 ] && return
+      OPT "h"; Key=$?; [ "$Key" -eq 1 ] && return
     }
     cp -af "$1" "$TMPLOC/$pkg.apk"
     pm install "$TMPLOC/$pkg.apk" >/dev/null 2>&1 || DEKH "❌ Failed to install $label" "hx" 1
@@ -452,7 +452,7 @@ INSTALL() {
     DEKH "📦 [$mcnt] $label (v$ver) 📲" 1 "h*"
     [ "$INSTYP" = "SELECT" ] && {
       DEKH "🔊 Vol+ = Install LSPosed Module\n🔉 Vol- = Skip Module"
-      OPT; [ $? -eq 1 ] && return
+      OPT "h"; Key=$?; [ "$Key" -eq 1 ] && return
     }
     case "$path" in
     *.apk)
