@@ -255,13 +255,16 @@ SETPERM() {
   done < "$FILE"
 }
 
-# Process list safely with spaces
+# Process strings or files list safely with spaces
 PRSMOD() {
-  IFS='
-'; for line in $1; do
-    [ -n "$line" ] && "$2" "$line"
-    [ "$Key" = "2" ] || [ "$Key" = "12" ] && break
-  done; unset IFS
+  in="$1"; fn="$2"
+  rd() { while IFS= read -r l || [ -n "$l" ]; do
+           [ -n "$l" ] && "$fn" "$l"
+           [ "$Key" = 2 ] || [ "$Key" = 12 ] && break
+         done; }
+  [ -f "$in" ] && rd <"$in" || rd <<EOF
+$in
+EOF
 }
 
 # Wait for processes to complete

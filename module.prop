@@ -1,6 +1,6 @@
 id=bundle-mods
 name=🗃️ Bundle Mods
-version=v4
-versionCode=40
+version=v4+
+versionCode=45
 author=@BuildBytes
 description=Bundle all your modules or apps in a Single Zip or into a separate folder for batch installation.
