@@ -266,21 +266,16 @@ PRSMOD() {
 
 # Wait for processes to complete
 COOLDOWN() {
-  texts=(
-    "Almost there..." "Please wait..." "Hang tight!" "Just a sec..." "Thanks!" "One moment..." "Hold on..." "Nearly done..." "Final steps..." "Loading..."
-  )
   while [ "$(pgrep -c tar)" -ge "$1" ]; do
-    msg="${texts[$((RANDOM % ${#texts[@]}))]}"
-    DEKH "⌛ Processes are finishing up. $msg."
-    sleep "$(( (RANDOM % 4) + 2 ))"
+    sleep 1
   done
 }
 
 # Unbundle Apps and It's directories
 UNBUNDAPP() {
-  COOLDOWN "$JOBS"
   FILE="$1"; DEST="$2"
-  [ -f "$FILE" ] || return 
+  [ -f "$FILE" ] || return
+  COOLDOWN "$JOBS"
   "$ZAPDOS" -d -q -c "$FILE" | tar -xf - -C "$DEST" &
 }
 
