@@ -105,24 +105,10 @@ unzip() {
   "$BB" unzip "$@"
 }
 
-# Count Strings from Registry
-CNTSTR() { [ -f "$1" ] && sort -u "$1" | grep -c . || eval "printf '%s\n' \"\${$1}\"" | grep -c .; }
-
 # Add Strings in Registry
 ADDSTR() {
   [ -f "$2" ] && { echo "$1" >> "$2"; sort -u "$2" -o "$2"; } ||
   eval "$2=\${$2:+\${$2}\$'\n'}\$1"
-}
-
-# Remove Strings from Registry
-DELSTR() {
-  [ -f "$2" ] && awk -v str="$1" '$0 != str' "$2" > "$2.tmp" && mv "$2.tmp" "$2" ||
-  eval "$2=\$(printf '%s\n' \"\${$2}\" | grep -Fxv -- \"\$1\")"
-}
-
-# Check for Duplicate Strings in Registry
-CHKDUP() {
-  eval "printf '%s\n' \"\${$2}\"" | grep -Fxq -- "$1"
 }
 
 # Replace Symbols with Spaces or Spaces with Underspace
@@ -133,22 +119,6 @@ SANITIZE() {
   else
     echo "$str" | sed 's/[[:punct:]]/ /g'
   fi
-}
-
-# Show Progress Bar Dynamically
-PROGRESS() {
-  cur=$1 total=$2
-  w=30 p=$((cur * 100 / total)) f=$((p * w / 100))
-  bar="$(printf '%*s' "$f" | tr ' ' '#')$(printf '%*s' $((w - f)) | tr ' ' '-')"
-  now=$(date +%s)
-  [ -z "$start" ] && start=$now
-  [ -z "$last" ] && last=0
-  delay=$(( total < 25 ? 1 : total < 50 ? 2 : total < 100 ? 3 : total < 200 ? 4 : 5 ))
-  interval=$((now - last))
-  [ "$cur" -ne "$total" ] && [ "$interval" -lt "$delay" ] && return
-  printf "\r[%s] %3d%% (%d/%d)" "$bar" "$p" "$cur" "$total"
-  [ "$cur" -eq "$total" ] && echo && echo
-  last=$now
 }
 
 # Restore any single File or Folder with it's Metadata
@@ -168,36 +138,6 @@ RST() {
   chmod "$perm" "$dest"
   chown "$uid:$gid" "$dest"
   touch -d "@$time" "$dest"
-}
-
-# Restore multiple Files and Folders with their Metadata 
-RSTBULK() {
-  src="$1"
-  dest="$2"
-  metafile="${src}.meta"
-  mkdir -p "$dest"
-  uid=$(stat -c "%u" "$dest")
-  gid=$(stat -c "%g" "$dest")
-  total=$(find "$src" -mindepth 1 | wc -l)
-  count=0
-  find "$src" -mindepth 1 | while IFS= read -r item; do
-    rel="${item#$src/}"
-    target="$dest/$rel"
-    [ -f "$item" ] && cp -af "$item" "$target"
-    [ -d "$item" ] && mkdir -p "$target"
-    chown "$uid:$gid" "$target"
-    count=$((count + 1))
-    PROGRESS "$count" "$total"
-  done
-  [ -f "$metafile" ] && while IFS= read -r line; do
-    set -- $line
-    path="$1" perm="$2" time="$3"
-    [ -z "$path" ] || [ -z "$perm" ] || [ -z "$time" ] && continue
-    target="$dest/$path"
-    [ -e "$target" ] || continue
-    chmod "$perm" "$target"
-    touch -d "@$time" "$target"
-  done < "$metafile"
 }
 
 # Get Sizes

@@ -152,12 +152,6 @@ unzip() {
   "$BB" unzip "$@"
 }
 
-# Random 6-10 digits string
-RAND() {
-  len=$((RANDOM % 3 + 3))
-  head -c "$len" /dev/urandom | xxd -p
-}
-
 # Count Strings from Registry
 CNTSTR() { [ -f "$1" ] && sort -u "$1" | grep -c . || eval "printf '%s\n' \"\${$1}\"" | grep -c .; }
 
@@ -219,22 +213,6 @@ CRENAME() {
   done
 }
 
-# Show Progress Bar Dynamically
-PROGRESS() {
-  cur=$1 total=$2
-  w=30 p=$((cur * 100 / total)) f=$((p * w / 100))
-  bar="$(printf '%*s' "$f" | tr ' ' '#')$(printf '%*s' $((w - f)) | tr ' ' '-')"
-  now=$(date +%s)
-  [ -z "$start" ] && start=$now
-  [ -z "$last" ] && last=0
-  delay=$(( total < 25 ? 1 : total < 50 ? 2 : total < 100 ? 3 : total < 200 ? 4 : 5 ))
-  interval=$((now - last))
-  [ "$cur" -ne "$total" ] && [ "$interval" -lt "$delay" ] && return
-  printf "\r[%s] %3d%% (%d/%d)" "$bar" "$p" "$cur" "$total"
-  [ "$cur" -eq "$total" ] && echo && echo
-  last=$now
-}
-
 # Backup any single File or Folder with it's Metadata
 BAK() {
   src="$1"
@@ -246,32 +224,6 @@ BAK() {
   mkdir -p "$dest"
   cp -af "$src" "$target"
   stat -c "%a %Y" "$src" > "$meta"
-}
-
-# Backup multiple Files and Folders with their Metadata
-BAKBULK() {
-  src="$1"
-  dest="$2"
-  rootname="$(basename "$src")"
-  rootdest="$dest/$rootname"
-  metafile="$dest/${rootname}.meta"
-  mkdir -p "$rootdest"
-  total=$(find "$src" -mindepth 1 | wc -l)
-  count=0
-  find "$src" -mindepth 1 | while IFS= read -r item; do
-    rel="${item#$src/}"
-    target="$rootdest/$rel"
-    dir="$(dirname "$target")"
-    [ -d "$dir" ] || mkdir -p "$dir"
-    [ -f "$item" ] && cp -af "$item" "$target"
-    [ -d "$item" ] && mkdir -p "$target"
-    perm=$(stat -c "%a" "$item")
-    time=$(stat -c "%Y" "$item")
-    echo "$rel $perm $time" >> "$metafile"
-    count=$((count + 1))
-    PROGRESS "$count" "$total"
-  done
-  echo ". $(stat -c "%a" "$src") $(stat -c "%Y" "$src")" >> "$metafile"
 }
 
 # Get Sizes
