@@ -27,19 +27,19 @@ echo "$ARCH" | grep -qE 'arm64-v8a' || {
 
 # Display UI
 DEKH() {
-  orgsandesh="$1"; samay="${2:-0.2}"; prakar="${3}"
-  [[ "$2" == h* ]] && prakar="${2}" && samay="${3:-0.2}"
-  echo "$orgsandesh" | grep -q '[^ -~]' && sandesh=" $orgsandesh" || sandesh=" $orgsandesh "
+  orgsandesh="$1"; samay="${2}"; prakar="${3}"
+  [[ "$2" == h* ]] && prakar="${2}" && samay="${3}"
+  [[ "$prakar" == h* ]] && {
+    echo "$orgsandesh" | grep -q '[^ -~]' && sandesh=" $orgsandesh" || sandesh=" $orgsandesh "
   rekha=$(printf "%s\n" "$sandesh" | awk '{ print length }' | sort -nr | head -n1)
   [ "$rekha" -gt 50 ] && rekha=50
   akshar=(= - ~ '*' + '<' '>')
-  [[ "$prakar" == h* ]] && {
     shabd="${prakar#h}"; [ -z "$shabd" ] && shabd="${akshar[RANDOM % ${#akshar[@]}]}"
     echo; printf '%*s\n' "$rekha" '' | tr ' ' "$shabd"
     echo -e "$sandesh"
     printf '%*s\n' "$rekha" '' | tr ' ' "$shabd"
   } || echo -e "$orgsandesh"
-  sleep "$samay"
+  [ -n "$samay" ] && sleep "$samay"
 }
 
 # Read Files
