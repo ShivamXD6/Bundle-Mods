@@ -22,6 +22,9 @@
 - 🎮 Control installation with **volume buttons**.
 - 🛠️ Supports: Magisk, KernelSU, APatch, and their forks.
 
+## 🎯 I only want to back up my user apps, nothing extra.
+- No worries!👉 Just use the **Data Backup** sub-module: **[📥 View Source & Download](https://github.com/ShivamXD6/Data-Backup)**
+
 ## 📖 Documentation
 
   ## SD Card Support?
@@ -51,12 +54,15 @@
 
   ## Backup Restore modules data
   - It backups or restores data from the respective paths from the data.sh.
+
+  ## Do I have to reboot after backup or restore?
+  - No, unless you're also restoring the Android ID for the app.
   
   ## User Apps
 
   ### Selection Method for Components/Parts of Apps
-  - If you select app only, and delete it's temporary/placeholder file, it will auto select available parts (except Android ID or All Permissions)
-  - For selecting specific parts, select parts and apps (which you want to backup for the apps)
+  - If you select app only, and delete it's temporary/placeholder file, it will auto select available parts (except Android ID or All Available Permissions)
+  - For selecting specific parts, select parts and apps (which you want to backup for the apps simultaneously)
   
   ### Why it's faster then apps like Swift Backup?
   - It uses ZAPDOS (zstd) with tar as it's compressing binary, which is much faster then zip or other binaries.
@@ -64,7 +70,7 @@
   - Also for Batch apps installation, it install app and runs optimization for that particular app in Background, meanwhile it install the next app which saves time.
   - [Click to Check the Comparison Between Swift Backup and Bundle Mods Here](https://telegram.me/buildbytes/142)
   
-  ### What it backup?
+  ### What it backups?
   - `#App` - App (including splits)
   - `#Data` - Data (from /data/data)
   - `#UserDe` (included with data default) - User Direct Encryption (from /data/user_de)
@@ -72,7 +78,7 @@
   - `#Media` - Media (from /Internal Storage/Android/media)
   - `#Obb` - OBB (from /Internal Storage/Android/obb)
   - `Granted Permissions` by default backup.
-  - `#PermAll` - All Supported Permissions (not only granted one)
+  - `#PermAll` - All Supported or Available Permissions (not only granted one)
   - `#AndroidID` - SSAID (from /data/system/users/0/settings_ssaid.xml)
 
   ## Pre-Install and Post-Install Scripts
@@ -82,6 +88,12 @@
   **Pre-Install.sh** → Runs before installation of modules or apps.
   
   **Post-Install.sh** → Runs after installation of modules or apps.
+
+  ## Why Some Binaries have Pokemon names?
+  - It's just for fun XD, anyways the actual names of the binaries are:
+  - Snorlax = zip binary
+  - Porygon Z = aapt binary
+  - Zapdos = zstd binary
 
 ## 📥 Installation Guide
 
