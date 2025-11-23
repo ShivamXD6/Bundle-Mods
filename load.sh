@@ -673,7 +673,7 @@ LSMOD() {
 LOCAPPS() {
   [ ! -d "$PKGAPPS" ] && mkdir -p "$PKGAPPS"
   MODMAP=""; PROCESSED=""
-  APPSLIST="$(find "$SDDIR" -type f \( -name "*.apk" -o -name "*.apks" -o -name "*.xapk" -o -name "*.apkm" \))"
+  APPSLIST="$(find "$SDDIR" -type f \( -name "*.apk" -o -name "*.apks" -o -name "*.apkm" \))"
   [ "$SELMODE" = "CONF" ] && SELMODE="FILE"
   [ "$SELMODE" = "FILE" ] && {
     mkdir -p "$SELDIR"
@@ -688,7 +688,7 @@ LOCAPPS() {
       *.apk)
         info="$("$PORYGONZ" dump badging "$app" 2>/dev/null)"
         ;;
-      *.apks|*.apkm|*.xapk)
+      *.apks|*.apkm)
         mkdir -p "$TMPLOC/$filename"
         unzip -p "$app" "base.apk" > "$TMPLOC/$filename/base.apk" 2>/dev/null
         base="$TMPLOC/$filename/base.apk"
