@@ -48,7 +48,7 @@ cat > "$PKGDIR/flash.sh" << 'FINISH'
 #!/system/bin/sh
 # Module Info UI
 DEKH "$(PADH "name" "$MODPATH/module.prop")" "h#" 1
-DEKH "🗃️ Powered By Bundle Mods v4"
+DEKH "🗃️ Powered By Bundle Mods v4+"
 DEKH "🌟 Packed By $(PADH "author" "$MODPATH/module.prop")"
 DEKH "⚡ Version - $(PADH "version" "$MODPATH/module.prop")"
 DEKH "🎲 Rooting Implementation - $ROOT"
@@ -82,7 +82,8 @@ fi
     OPT; [ $? -eq 1 ] && {
       BAKDIR="$BAKEXT"
     }
-  }
+    true
+  } || BAKDIR="$BAKEXT"
   
   # Update Vars for Backup Mode Folder
   PKGMOD="$BAKDIR/MODULES"
@@ -105,7 +106,7 @@ DEKH "⏬ Installing Mods/Apps" "h"
 INSTALL
 
 # Restore Data
-RSTDATA
+[ -d "$PKGMOD" ] && RSTDATA
 
 # Check for any post installation script 
 if [ -f "$MODPATH/Post-Install.sh" ]; then
@@ -249,13 +250,13 @@ if [ $? -eq 0 ]; then
   CUSAUTHOR="$(CRENAME "$RNMDIR" "$AUTHORPH")" || CUSAUTHOR="Unknown"
   DEKH "✅ Pack Author set to: $CUSAUTHOR"
   touch "$RNMDIR/$VERSIONPH"
-  CUSVERSION="$(CRENAME "$RNMDIR" "$VERSIONPH")" || CUSVERSION="v4 ($NOW)"
+  CUSVERSION="$(CRENAME "$RNMDIR" "$VERSIONPH")" || CUSVERSION="v4+ ($NOW)"
   DEKH "✅ Pack Version set to: $CUSVERSION"
   CFM; rm -rf "$RNMDIR"; sleep 1
 else
   CUSNAME="🧰 Modules or Apps Package - $(getprop ro.product.model)"
   CUSAUTHOR="Unknown"
-  CUSVERSION="v4 ($NOW)"
+  CUSVERSION="v4+ ($NOW)"
   DEKH "✅ Using Default Values: \n$CUSNAME [$CUSVERSION] by $CUSAUTHOR"
 fi
 

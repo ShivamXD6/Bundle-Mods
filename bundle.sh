@@ -1,6 +1,5 @@
 #!/system/bin/sh
 # Setup Environment (Variables & Functions)
-[ -z "$MODPATH" ] && MODPATH="${0%/*}"
 TMPDIR="$(mktemp -d 2>/dev/null)" || TMPDIR="/dev/tmp"
 chmod 700 "$TMPDIR"
 [ -z "$MODPATH" ] && MODPATH="${0%/*}"
@@ -198,14 +197,12 @@ SETPERM() {
 
 # Process strings or files list safely with spaces
 PRSMOD() {
-  in="$1"; fn="$2"
-  rd() { while IFS= read -r l || [ -n "$l" ]; do
-           [ -n "$l" ] && "$fn" "$l"
-           [ "$Key" = 2 ] || [ "$Key" = 12 ] && return
-         done; }
-  [ -f "$in" ] && rd <"$in" || rd <<EOF
-$in
-EOF
+  in="$1"; fn="$2"; TMPFILE="$TMPLOC/tmp_list.txt"
+  [ -f "$in" ] && [ "${in##*.}" = "txt" ] && cp -f "$in" "$TMPFILE" || printf "%s\n" "$in" > "$TMPFILE"
+  while IFS= read -r l || [ -n "$l" ]; do
+    [ -z "$l" ] || "$fn" "$l"
+    [ "$Key" = 2 ] || [ "$Key" = 12 ] && break
+  done < "$TMPFILE"
 }
 
 # Wait for processes to complete
@@ -304,7 +301,7 @@ FETCHMODS() {
   }
   PSSHOWUAPPS() {
     pkg="$(basename "$1")"
-    label="$(PADH Name "$1/Meta.txt")"
+    label="$(PADH Name "$1/Meta.txt")"; label=$(SANITIZE "$label")
     ver="$(PADH Version "$1/Meta.txt")"
     sizes="$(PADH Size "$1/Meta.txt")"
     IFS='|' read -r asize dsize esize msize osize <<< "$sizes"
@@ -333,11 +330,12 @@ FETCHMODS() {
         unzip -p "$1" "base.apk" > "$TMPLOC/$name/base.apk" 2>/dev/null
         base="$TMPLOC/$name/base.apk"
         info="$("$PORYGONZ" dump badging "$base" 2>/dev/null)"
-        rm -rf "$TMPLOC/$name" ;;
+        rm -rf "$TMPLOC/$name"
     esac
     pkg="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f2)"
-    label="$(echo "$info" | grep -m1 "application-label:" | cut -d"'" -f2)"; label=$(SANITIZE "$label")
     ver="$(echo "$info" | grep -m1 "package: name=" | cut -d"'" -f6)"
+    PKG_INSTALLED "$pkg" "$ver" && return 1
+    label="$(echo "$info" | grep -m1 "application-label:" | cut -d"'" -f2)"; label=$(SANITIZE "$label")
     ADDSTR "$1:$name:$pkg:$label:$ver" "FAPPSLIST"
     mcnt=$((mcnt + 1))
   }
@@ -353,19 +351,26 @@ INSTALL() {
   cd "$TMPLOC"
   PSZIPMOD() {
     mcnt=$((mcnt + 1))
-    IFS=: read -r path id label ver <<< "$1"
+    path="$(echo "$1" | cut -d: -f1)"
+    id="$(echo "$1" | cut -d: -f2)"
+    label="$(echo "$1" | cut -d: -f3)"
+    ver="$(echo "$1" | cut -d: -f4-)"
     DEKH "📦 [$mcnt] $label ($ver) $type" 1 "h*"
     [ "$INSTYP" = "SELECT" ] && {
       DEKH "🔊 Vol+ = Install Module\n🔉 Vol- = Skip Module"
       OPT "h"; Key=$?; [ "$Key" -eq 1 ] && return
     }
     cp -af "$path" "$TMPLOC/$id.zip"
-    su -c "$CMD '$TMPLOC/$id.zip'" 2>/dev/null || DEKH "❌ Failed to install $label ($ver)" "hx" 1
-    rm -f $TMPLOC/$id.zip
+    su -c "$CMD '$TMPLOC/$id.zip'" || DEKH "❌ Failed to install $label ($ver)" "hx" 1
+    rm -f "$TMPLOC/$id.zip"
   }
   PSUAPPS() {
     mcnt=$((mcnt + 1))
-    IFS=: read -r path size pkg label ver <<< "$1"
+    path=$(echo "$1" | cut -d: -f1)
+    size=$(echo "$1" | cut -d: -f2)
+    pkg=$(echo "$1" | cut -d: -f3)
+    label=$(echo "$1" | cut -d: -f4)
+    ver=$(echo "$1" | cut -d: -f5-)
     size=$(GETSIZE $size)
     DEKH "📦 [$mcnt] $label📱" "h*"
     DEKH "ℹ️ Version: $ver | Size: $size"
@@ -373,23 +378,30 @@ INSTALL() {
       DEKH "🔊 Vol+ = Install App\n🔉 Vol- = Skip App"
       OPT "h"; Key=$?; [ "$Key" -eq 1 ] && return
     }
-    RSTAPP "$pkg" "$path" || DEKH "❌ Failed to install $label" "hx" 1
+    RSTAPP "$pkg" "$path" || DEKH "❌ Failed to install $label (v$ver)" "hx" 1
   }
   PSLSMOD() {
     mcnt=$((mcnt + 1))
-    IFS=: read -r path pkg label ver <<< "$1"
+    path=$(echo "$1" | cut -d: -f1)
+    pkg=$(echo "$1" | cut -d: -f2)
+    label=$(echo "$1" | cut -d: -f3)
+    ver=$(echo "$1" | cut -d: -f4-)
     DEKH "📦 [$mcnt] $label (v$ver) 🧩" 1 "h*"
     [ "$INSTYP" = "SELECT" ] && {
       DEKH "🔊 Vol+ = Install LSPosed Module\n🔉 Vol- = Skip Module"
       OPT "h"; Key=$?; [ "$Key" -eq 1 ] && return
     }
-    cp -af "$1" "$TMPLOC/$pkg.apk"
-    pm install "$TMPLOC/$pkg.apk" >/dev/null 2>&1 || DEKH "❌ Failed to install $label" "hx" 1
-    rm -f $TMPLOC/$pkg.apk
+    cp -af "$path" "$TMPLOC/$pkg.apk"
+    pm install "$TMPLOC/$pkg.apk" >/dev/null 2>&1 || DEKH "❌ Failed to install $label (v$ver)" "hx" 1
+    rm -f "$TMPLOC/$pkg.apk"
   }
   PSAPPS() {
     mcnt=$((mcnt + 1))
-    IFS=: read -r path name pkg label ver <<< "$1"
+    path=$(echo "$1" | cut -d: -f1)
+    name=$(echo "$1" | cut -d: -f2)
+    pkg=$(echo "$1" | cut -d: -f3)
+    label=$(echo "$1" | cut -d: -f4)
+    ver=$(echo "$1" | cut -d: -f5-)
     DEKH "📦 [$mcnt] $label (v$ver) 📲" 1 "h*"
     [ "$INSTYP" = "SELECT" ] && {
       DEKH "🔊 Vol+ = Install LSPosed Module\n🔉 Vol- = Skip Module"
@@ -404,13 +416,13 @@ INSTALL() {
     *.apks|*.apkm)
       apks=$(find "$TMPLOC/$name" -name "*.apk" | sort)
       pm install $apks >/dev/null 2>&1 || DEKH "❌ Failed to install $label (v$ver)" "hx" 1
-      rm -f $TMPLOC/$name
+      rm -f "$TMPLOC/$name"
       ;;
     esac
   }
   START=$(date +%s)
-  [ -n "$FPMODLIST" ] && type="⚡"; PRSMOD "$FPMODLIST" "PSZIPMOD"
-  [ -n "$FZMODLIST" ] && type="🖇️"; PRSMOD "$FZMODLIST" "PSZIPMOD"
+  [ -n "$FPMODLIST" ] && { type="⚡"; PRSMOD "$FPMODLIST" "PSZIPMOD"; }
+  [ -n "$FZMODLIST" ] && { type="🖇️"; PRSMOD "$FZMODLIST" "PSZIPMOD"; }
   [ -n "$FUAPPSLIST" ] && {
    JOBS=$(( $(nproc) / 2 )); JOBS=${JOBS:-4}
    FUAPPSLIST=$(echo "$FUAPPSLIST" | sort -t: -k2,2nr)
@@ -429,7 +441,7 @@ INSTALL() {
   else
     DEKH "⏱️ Took: ${SEC}s"
   fi
-  FIXOWN
+  [ -n "$FUAPPSLIST" ] && FIXOWN
 }
 
 # Restore Modules Data if any

@@ -1,16 +1,15 @@
 #!/system/bin/sh
 # Variables and Functions
-[ -z "$MODPATH" ] && MODPATH="${0%/*}"
 TMPDIR="$(mktemp -d 2>/dev/null)" || TMPDIR="/dev/tmp"
 chmod 700 "$TMPDIR"
 [ -z "$MODPATH" ] && MODPATH="${0%/*}"
 VTD="$TMPDIR/.verify"
 mkdir -p "$VTD"
 unzip -o "$ZIPFILE" -d "$VTD" >&2
-PREFIX=' 037d6e7e7e 335a4830e7 54549d48a243125a 248c295d160fafe1 7a440095cd3cd3e3 25f886a8 d56f0250140a 5aa32d3e2f 7b4c71 3d60a4f90701c9 26d60cc506'
-INFIX=' a4da783bd7ac 41e60b5b af1dc5e35664 4fa709 d0fcd63ba3771d 255b38880ecf3d4b 795907 399ab324 5d4347 0eba785e db52f484c7fd46'
-SUFFIX=' 3cb5138a03e6 82a9d0bb3ec303f5 4f7555e511 d33e90eeefaf4a 594367 705bc31223c7e6 f1c9169117ffa483 ced1ea 2c005d62 b825c66dcd13034c 279528bea9'
-EXPECTED_COUNT=12
+PREFIX=' 0e1451 db5afe29 ab281d6872a8 d1bd9b3b a8fc3118bb a5e3d3 6b89f1756ae4 4a0d3b2bce 010b84 3480305ff786a8eb 1cac5986a11b274c f9593442167b'
+INFIX=' 96b332abc94975d2 de7b0740bd97d3c0 8fa8894867717a bee70f0781 830705cd76c7ea06 10efc6cc 660ca6e6 d15a025b03698c b1b075 dd05d6 5c2e2e7ef0c8a096 6dbee3f60687bb3c'
+SUFFIX=' dfbce0eb1e 5f2bf41d9d7c 3d580ea4fa fa48ef758a00 85c1e3d929e079 60d0c46f 3b4171d8b896f510 148db9b18cb6fda8 093288c10526d350 dc8710a01103e2 3f5f86 b1e041c99d0c'
+EXPECTED_COUNT=13
 ACTUAL_COUNT=$(find "$VTD" -type f | wc -l)
 export TMPLOC="/data/local/tmp"
 rm -rf "$TMPLOC" && mkdir -p "$TMPLOC"
@@ -23,8 +22,6 @@ RNMDIR="$DOWNDIR/Rename_Module_Meta"
 RNMFLD="$(basename $RNMDIR)"
 SELDIR="$DOWNDIR/Delete_To_Select"
 SELFLD="$(basename $SELDIR)"
-SRPTDIR="$DOWNDIR/Add_Script_Here"
-SELSRT="$(basename $SRPTDIR)"
 Hashes="$MODPATH/hashes"
 PKGDIR="$MODPATH/PACKED"
 PKGMOD="$PKGDIR/MODULES"
@@ -52,17 +49,18 @@ echo "$ARCH" | grep -qE 'arm64-v8a' || {
 
 # Write Hashes
 cat > "$Hashes" << 'HASHED'
-037d6e7e7ed7278c6dece18b43b173768a2275dbbdf4042b11130a5012a4da783bd7ace2f93c9fb78acf5eee1a823a93a46b80818bda0fd93d92803cb5138a03e6 "./flash.sh"
-335a4830e70cb1005c65c89bc24a8b4dd06d033c9b624b2cd5a0f63b7841e60b5b07df9d2448977e3e102515ca3300de2ec96db8c23626ab9982a9d0bb3ec303f5 "./snorlax"
-54549d48a243125a2cbaaf9e35fa2cb53ee26fc79474727af4135eb000823cabaf1dc5e35664fe86091f405bab6f24659afe4b4f540b01ed930af27499754f7555e511 "./ok.sh"
-248c295d160fafe1bd23b8290319c3a083de43ad0176fde017b9c7821e80aa524fa7091e1f98077b8628f2b1cdb70c603d60d67de5c5b81a78c242d33e90eeefaf4a "./META-INF/com/google/android/updater-script"
-7a440095cd3cd3e37f18ec95eed0658affea288928456bdd19e029dc8b6e3484d0fcd63ba3771d03c9a23f280712e4896d1009748f766c4e3b0a1a65927fe7594367 "./META-INF/com/google/android/update-binary"
-25f886a8405965de77f7075352a9d8b65164451869a18d0e6556ffdc255b38880ecf3d4ba5396b5ef6e99b5b99b55a5a8aa31e0e7d42fc74b8293287705bc31223c7e6 "./bundle"
-d56f0250140af9f284681331fe803ec1170fdbe7df4c7affd79b003f6252795907c0bcde934f53b7c82ffc0400fbe1efaf81e6d980de72049ef1c9169117ffa483 "./porygonz"
-5aa32d3e2ff170b6f8439c74b2e42d12a91b9b72f6876ab90719c541b5399ab3246df0d45867636fbb6f91a387402ae2dc05cc685712669f3eced1ea "./module.prop"
-7b4c71e456227081ef1f69a5e4c4e85bfd7387576d48dc26bc714c5d4347c178f8c892ce44435f4bf21dba876280050b892354f840972c005d62 "./customize.sh"
-3d60a4f90701c93a033b058f730703da1f906c1fc563163a94dd22be08d5b60eba785e3bec379dfddd4301c8bce6af9c0c06cb2e9c4172ca2b4a7ab825c66dcd13034c "./zapdos"
-26d60cc5063d17014b7ca7f4922e873bc84fc180f6352359248d1653a5db52f484c7fd4682e0472d7cfb07f8ca1f60121c93c9258ce021d44083fec3279528bea9 "./data.sh"
+0e1451181f686650e1a30cf1ab7d77ce06c5c7cf9e4ee79bfa0b1296b332abc94975d282da3e80200c30be548858ab9e387fd65b6f3bf3cb729baadfbce0eb1e "./service.sh"
+db5afe296e9c2c8917a39c68de524000651c81e5b4fca88ef38b4833de7b0740bd97d3c007cba5e8781b376d2bc3b29766446fd1137d8bcd7bbb7ef95f2bf41d9d7c "./customize.sh"
+ab281d6872a8f9f284681331fe803ec1170fdbe7df4c7affd79b003f62528fa8894867717ac0bcde934f53b7c82ffc0400fbe1efaf81e6d980de72049e3d580ea4fa "./porygonz"
+d1bd9b3b7f18ec95eed0658affea288928456bdd19e029dc8b6e3484bee70f078103c9a23f280712e4896d1009748f766c4e3b0a1a65927fe7fa48ef758a00 "./META-INF/com/google/android/update-binary"
+a8fc3118bbbd23b8290319c3a083de43ad0176fde017b9c7821e80aa52830705cd76c7ea061e1f98077b8628f2b1cdb70c603d60d67de5c5b81a78c24285c1e3d929e079 "./META-INF/com/google/android/updater-script"
+a5e3d33a033b058f730703da1f906c1fc563163a94dd22be08d5b610efc6cc3bec379dfddd4301c8bce6af9c0c06cb2e9c4172ca2b4a7a60d0c46f "./zapdos"
+6b89f1756ae4a014f78090539ba0408b1732f46481def091a36e520df846660ca6e60002163e0fcadb43a8760805797b7335155b44f22eec6fab3b4171d8b896f510 "./ok.sh"
+4a0d3b2bce7fcf3ced94541f1efec96fab347e97d383e72888a4163d1ed15a025b03698cea349e83710d879ae69916cc562be744f6f79a6f9a37554c148db9b18cb6fda8 "./bundle"
+010b84719fa91042ea3fce25752e8d58ccccf1a7132eab9fa5ca53b1b075285cc1dc18d2f6362929d7a562d270f0bcc2923a30f82bf5093288c10526d350 "./module.prop"
+3480305ff786a8ebbc96cbc2c8bc3fa9a5412f42d54293e3c185a36c3e3995e6dd05d60e285de0d52c5fb0aa269fbe5885e230c22eed3cf4592cf1dc8710a01103e2 "./flash.sh"
+1cac5986a11b274c0cb1005c65c89bc24a8b4dd06d033c9b624b2cd5a0f63b785c2e2e7ef0c8a09607df9d2448977e3e102515ca3300de2ec96db8c23626ab993f5f86 "./snorlax"
+f9593442167b3d17014b7ca7f4922e873bc84fc180f6352359248d1653a56dbee3f60687bb3c82e0472d7cfb07f8ca1f60121c93c9258ce021d44083fec3b1e041c99d0c "./data.sh"
 HASHED
 
 # Display UI
@@ -242,14 +240,12 @@ GETSIZE() {
 
 # Process strings or files list safely with spaces
 PRSMOD() {
-  in="$1"; fn="$2"
-  rd() { while IFS= read -r l || [ -n "$l" ]; do
-           [ -n "$l" ] && "$fn" "$l"
-           [ "$Key" = 2 ] || [ "$Key" = 12 ] && return
-         done; }
-  [ -f "$in" ] && rd <"$in" || rd <<EOF
-$in
-EOF
+  in="$1"; fn="$2"; TMPFILE="$TMPLOC/tmp_list.txt"
+  [ -f "$in" ] && [ "${in##*.}" = "txt" ] && cp -f "$in" "$TMPFILE" || printf "%s\n" "$in" > "$TMPFILE"
+  while IFS= read -r l || [ -n "$l" ]; do
+    [ -z "$l" ] || "$fn" "$l"
+    [ "$Key" = 2 ] || [ "$Key" = 12 ] && break
+  done < "$TMPFILE"
 }
 
 # Check for file is an app
@@ -328,6 +324,7 @@ CFM () {
 
 # Select/Detect deletion of Files
 SELECT() {
+  [ -z "$MODMAP" ] && DEKH "⚠️ No modules/apps available to select" && return 0
   OFM "$SELFLD"; OPT
   SELECTED=""
   DEKH "✔️ Processing your selections, Please Wait..."
@@ -343,8 +340,8 @@ SELECT() {
       CHKDUP "$id-$ver" "SKIPPED" || ADDSTR "$id-$ver" "SKIPPED"
     fi
   done <<< "$MODMAP"
-  [ -z "$SELECTED" ] && DEKH "⚠️ No modules/apps selected"
   MODMAP="$SELECTED"
+  [ -z "$SELECTED" ] && DEKH "⚠️ No modules/apps selected"
   rm -rf "$SELDIR"
 }
 
@@ -451,7 +448,7 @@ BAKAPP() {
     ID=$(READID "$PKG")
     [ -n "$ID" ] && echo "SSAID=$ID" >> "$APP/Meta.txt"
   }
-  echo "$COMPONENTS" | grep -qw "#PermAll" || GETPERM "$PKG" "$APP/Permissions.txt"
+  echo "$COMPONENTS" | grep -qw "#PermAll" && rm -f "$APP/Permissions.txt" || GETPERM "$PKG" "$APP/Permissions.txt"
   echo "Size=$asize|$dsize|$esize|$msize|$osize" >> "$APP/Meta.txt"
 }
 
@@ -460,7 +457,8 @@ LOCMOD() {
   [ ! -d "$PKGMOD" ] && mkdir -p "$PKGMOD"
   MODMAP=""; PROCESSED=""
   ZMODLIST="$(find "$SDDIR" -type f -name "*.zip")"
- [ "$SELMODE" = "FILE" ] && {
+  [ "$SELMODE" = "CONF" ] && SELMODE="FILE"
+  [ "$SELMODE" = "FILE" ] && {
     mkdir -p "$SELDIR"
     DEKH "📂 $(basename "$SELDIR") folder will open in a moment\n🗑️ Delete to Add Local Modules\n🔉 Press any Vol Key to Finish" 2 &
   }
@@ -627,7 +625,8 @@ LSMOD() {
   [ ! -d "$PKGMOD" ] && mkdir -p "$PKGMOD"
   MODMAP=""; PROCESSED=""
   LSMODLIST="$(find "$SDDIR" -type f -name "*.apk")"
- [ "$SELMODE" = "FILE" ] && {
+  [ "$SELMODE" = "CONF" ] && SELMODE="FILE"
+  [ "$SELMODE" = "FILE" ] && {
     mkdir -p "$SELDIR"
     DEKH "📂 $(basename "$SELDIR") folder will open in a moment\n🗑️ Delete to Add LSPosed Modules\n🔉 Press any Vol Key to Finish" 2 &
   }
@@ -675,10 +674,11 @@ LSMOD() {
 LOCAPPS() {
   [ ! -d "$PKGAPPS" ] && mkdir -p "$PKGAPPS"
   MODMAP=""; PROCESSED=""
-  APPSLIST="$(find "$SDDIR" -type f \( -name "*.apk" -o -name "*.apks" -o -name "*.apkm" \))"
+  APPSLIST="$(find "$SDDIR" -type f \( -name "*.apk" -o -name "*.apks" -o -name "*.xapk" -o -name "*.apkm" \))"
+  [ "$SELMODE" = "CONF" ] && SELMODE="FILE"
   [ "$SELMODE" = "FILE" ] && {
     mkdir -p "$SELDIR"
-    DEKH "📂 $(basename "$SELDIR") folder will open in a moment\n🗑️ Delete to Add Local Apps\n🔉 Press any Vol Key to Finish" 2
+    DEKH "📂 $(basename "$SELDIR") folder will open in a moment\n🗑️ Delete to Add Local Apps\n🔉 Press any Vol Key to Finish" 2 &
   }
   DEKH "✅ Validating Local Apps... Please wait"
   while IFS= read -r app || [ -n "$app" ]; do
@@ -689,7 +689,7 @@ LOCAPPS() {
       *.apk)
         info="$("$PORYGONZ" dump badging "$app" 2>/dev/null)"
         ;;
-      *.apks|*.apkm)
+      *.apks|*.apkm|*.xapk)
         mkdir -p "$TMPLOC/$filename"
         unzip -p "$app" "base.apk" > "$TMPLOC/$filename/base.apk" 2>/dev/null
         base="$TMPLOC/$filename/base.apk"
