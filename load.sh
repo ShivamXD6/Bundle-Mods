@@ -80,6 +80,7 @@ DEKH() {
     printf '%*s\n' "$rekha" '' | tr ' ' "$shabd"
   } || echo -e "$orgsandesh"
   [ -n "$samay" ] && sleep "$samay"
+  return 0
 }
 
 # Check for volume key
