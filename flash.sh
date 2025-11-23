@@ -83,7 +83,7 @@ fi
       BAKDIR="$BAKEXT"
     }
     true
-  } || BAKDIR="$BAKEXT"
+  } || [ -d "$BAKEXT" ] && BAKDIR="$BAKEXT"
   
   # Update Vars for Backup Mode Folder
   PKGMOD="$BAKDIR/MODULES"
