@@ -1,4 +1,5 @@
 # 🗃️ Bundle-Mods
+
 > A simple tool that lets you bundle all your magisk or lsposed modules or even your local apps or user apps (with parts like Swift Backup) into one neat pack or in a separate folder, set a custom name, author, version, and much more, perfect for carrying your favorite modules or apps without carrying multiple files.
 
 [![Downloads](https://img.shields.io/github/downloads/ShivamXD6/Bundle-Mods/total?color=green&style=for-the-badge)](https://github.com/ShivamXD6/Bundle-Mods/releases/latest)
@@ -12,6 +13,7 @@
 ![APatch](https://img.shields.io/badge/APatch-FF6B00?style=for-the-badge&logo=android&logoColor=white)
 
 ## ❔ What it does:
+
 - 🧳 Combines all your `.zip` modules or app files (`.apk`, `.apks`, `.apkm`) into a single pack.
 - 📱 Additionally Include User Apps with their parts/data much faster then Swift Backup or other Data Backup Apps.
 - 🧩 Add **LSPosed modules** and other supported modules to the same pack.
@@ -23,81 +25,97 @@
 - 🛠️ Supports: Magisk, KernelSU, APatch, and their forks.
 
 ## 🎯 I only want to back up my user apps, nothing extra.
+
 - No worries!👉 Just use the **Data Backup** sub-module: **[📥 View Source & Download](https://github.com/ShivamXD6/Data-Backup)**
 
 ## 📖 Documentation
 
-  ## SD Card Support?
-  - Yes, it supports sdcard you will prompt to select for backup or restore, if there's any sdcard exist.
+## SD Card Support?
 
-  ## Can I rename #Backup folder to something else?
-  - Yes you can, just keep `.bundle-mods` file in it to check later if it's a backup folder or not.
-  
-  ## Backup Styles:
-  - **Separate Folder** - Faster, no Compression or extraction but less portability, messy many files.
-  - **Zip Package** - Slower, because of compression and extraction but better portability, neat 1 file.
-  
-  ## Selection Styles:
-  - Delete temporary Files or placeholders to select modules or apps in `Delete_To_Select` folder.
-  - Use Volume Keys to Select, (not much advanced or fast)
+- Yes, it supports sdcard you will prompt to select for backup or restore, if there's any sdcard exist.
 
-  ## What it can backup?
-  - Magsik or ZIP modules [Emojis: 🔗⚡]
-  - User Apps (with Data) [Emoji: 📱]
-  - LSPosed Modules [Emoji: 🧩]
-  - Local Apps (supports: apk,apks,apkm) [Emoji: 📲]
+## Can I rename #Backup folder to something else?
 
-  ## Prioritize Some ZIP Modules
-  Some modules must be installed before others to avoid issues.
-  - Modules marked with `⚡` are given priority and installed first.
-  - **Example:** Shamiko fails if Zygisk Next isn’t installed before it.
+- Yes you can, just keep `.bundle-mods` file in it to check later if it's a backup folder or not.
 
-  ## Backup Restore modules data
-  - It backups or restores data from the respective paths from the data.sh.
+## Backup Styles:
 
-  ## Do I have to reboot after backup or restore?
-  - No, unless you're also restoring the Android ID for the app.
-  
-  ## User Apps
+- **Separate Folder** - Faster, no Compression or extraction but less portability, messy many files.
+- **Zip Package** - Slower, because of compression and extraction but better portability, neat 1 file.
 
-  ### Selection Method for Components/Parts of Apps
-  - If you select app only, and delete it's temporary/placeholder file, it will auto select available parts (except Android ID or All Available Permissions)
-  - For selecting specific parts, select parts and apps (which you want to backup for the apps simultaneously)
-  
-  ### Why it's faster then apps like Swift Backup?
-  - It uses ZAPDOS (zstd) with tar as it's compressing binary, which is much faster then zip or other binaries.
-  - For Batch backup or installation, it uses Parallel Processing with Decreasing order of Apps sizes.
-  - Also for Batch apps installation, it install app and runs optimization for that particular app in Background, meanwhile it install the next app which saves time.
-  - [Click to Check the Comparison Between Swift Backup and Bundle Mods Here](https://telegram.me/buildbytes/142)
-  
-  ### What it backups?
-  - `#App` - App (including splits)
-  - `#Data` - Data (from /data/data)
-  - `#UserDe` (included with data default) - User Direct Encryption (from /data/user_de)
-  - `#ExtData` - External Data (from /Internal Storage/Android/data)
-  - `#Media` - Media (from /Internal Storage/Android/media)
-  - `#Obb` - OBB (from /Internal Storage/Android/obb)
-  - `Granted Permissions` by default backup.
-  - `#PermAll` - All Supported or Available Permissions (not only granted one)
-  - `#AndroidID` - SSAID (from /data/system/users/0/settings_ssaid.xml)
+## Selection Styles:
 
-  ## Pre-Install and Post-Install Scripts
-  You can add your own custom installation scripts either in zip file directly or by placing them in: ``/Internal Storage/#Backup/``
-  They will be automatically executed if named:
-  
-  **Pre-Install.sh** → Runs before installation of modules or apps.
-  
-  **Post-Install.sh** → Runs after installation of modules or apps.
+- Delete temporary Files or placeholders to select modules or apps in `Delete_To_Add` folder.
+- Use Volume Keys to Select, (not much advanced or fast)
 
-  ## Why Some Binaries have Pokemon names?
-  - It's just for fun XD, anyways the actual names of the binaries are:
-  - Snorlax = zip binary
-  - Porygon Z = aapt binary
-  - Zapdos = zstd binary
+## What it can backup?
+
+- Magsik or ZIP modules [Emojis: 🔗⚡]
+- User Apps (with Data) [Emoji: 📱]
+- LSPosed Modules [Emoji: 🧩]
+- Local Apps (supports: apk,apks,apkm) [Emoji: 📲]
+
+## Prioritize Some ZIP Modules
+
+Some modules must be installed before others to avoid issues.
+
+- Modules marked with `⚡` are given priority and installed first.
+- **Example:** Shamiko fails if Zygisk Next isn’t installed before it.
+
+## Backup Restore modules data
+
+- It backups or restores data from the respective paths from the data.sh.
+
+## Do I have to reboot after backup or restore?
+
+- No, unless you're also restoring the Android ID for the app.
+
+## User Apps
+
+### Selection Method for Components/Parts of Apps
+
+- If you select app only, and delete it's temporary/placeholder file, it will auto select available parts (except Android ID or All Available Permissions)
+- For selecting specific parts, select parts and apps (which you want to backup for the apps simultaneously)
+
+### Why it's faster then apps like Swift Backup?
+
+- It uses ZAPDOS (zstd) with tar as it's compressing binary, which is much faster then zip or other binaries.
+- For Batch backup or installation, it uses Parallel Processing with Decreasing order of Apps sizes.
+- Also for Batch apps installation, it install app and runs optimization for that particular app in Background, meanwhile it install the next app which saves time.
+- [Click to Check the Comparison Between Swift Backup and Bundle Mods Here](https://telegram.me/buildbytes/142)
+
+### What it backups?
+
+- `#App` - App (including splits)
+- `#Data` - Data (from /data/data)
+- `#UserDe` (included with data default) - User Direct Encryption (from /data/user_de)
+- `#ExtData` - External Data (from /Internal Storage/Android/data)
+- `#Media` - Media (from /Internal Storage/Android/media)
+- `#Obb` - OBB (from /Internal Storage/Android/obb)
+- `Granted Permissions` by default backup.
+- `#PermAll` - All Supported or Available Permissions (not only granted one)
+- `#AndroidID` - SSAID (from /data/system/users/0/settings_ssaid.xml)
+
+## Pre-Install and Post-Install Scripts
+
+You can add your own custom installation scripts either in zip file directly or by placing them in: `/Internal Storage/#Backup/`
+They will be automatically executed if named:
+
+**Pre-Install.sh** → Runs before installation of modules or apps.
+
+**Post-Install.sh** → Runs after installation of modules or apps.
+
+## Why Some Binaries have Pokemon names?
+
+- It's just for fun XD, anyways the actual names of the binaries are:
+- Snorlax = zip binary
+- Porygon Z = aapt binary
+- Zapdos = zstd binary
 
 ## 📥 Installation Guide
 
 ### Just flash Module and follow the instructions display on your screen :)
+
 ### [Created Modules pack example here](https://t.me/buildbytes/54)
 
 > [!NOTE]
@@ -116,5 +134,7 @@ If you find Bundle-Mods helpful and want to support development, you can donate 
 Every contribution helps keep the project alive and improved! Thank you! 😊
 
 ## 🤝 Contribute
+
 ### Want to help improve this project?
+
 Even if you don't know coding much you can contribute to data.sh for modules data paths :)
