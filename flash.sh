@@ -1,12 +1,11 @@
 #!/system/bin/sh
 
 # Module Info UI
-DEKH "$(PADH "name" "$MODPATH/module.prop")" "h#" 1
+DEKH "$(PADH "name" "$MODPATH/module.prop")" "h#"
 DEKH "🌟 Made By $(PADH "author" "$MODPATH/module.prop")"
 DEKH "⚡ Version - $(PADH "version" "$MODPATH/module.prop")"
-DEKH "💻 Architecture - $ARCH"
 DEKH "🎲 Rooting Implementation - $ROOT"
-DEKH "📝 $(PADH "description" "$MODPATH/module.prop")"
+DEKH "📝 $(PADH "description" "$MODPATH/module.prop")" 1
 
 # Check for any external media
 if [ -n "$EXTSD" ]; then
@@ -21,18 +20,18 @@ DEKH "🔊 Vol+ = Keep folder separate (fast but messy)\n🔉 Vol- = Add into zi
 OPT
 [ $? -eq 0 ] && {
   BAKMODE="FOLDER"
-  mkdir -p "$SDDIR/#Backup"
   BAKDIR="$SDDIR/#Backup"
+  [ ! -d "$BAKDIR" ] && BAKDIR="$(dirname "$(find "$SDDIR" -maxdepth 2 -type f -name '.bundle-mods' | head -n 1)")"; [ "$BAKDIR" = "." ] && BAKDIR="$SDDIR/#Backup" && mkdir -p "$BAKDIR"
   PKGMOD="$BAKDIR/MODULES"
   PKGAPPS="$BAKDIR/APPS"
   DOWNDIR="$SDDIR/Download"
   MODDATA="$PKGMOD/DATA"
   > "$BAKDIR/.bundle-mods"
-  rm -f "$BAKDIR/"*.zip
 }
+[ ! -f "$ADBDIR/.bundle-ex" ] && NEWUSER=1
 
 # Create Base of Module Pack
-DEKH "⚒️ Building Module Package" "h"
+[ "$NEWUSER" -eq 1 ] && DEKH "⚒️ Building Module Package" "h"
 mkdir -p "$PKGDIR"
 touch "$PKGDIR/flash.sh"
 cp -af "$VTD/META-INF" "$PKGDIR/META-INF"
@@ -47,18 +46,18 @@ cp -af "$VTD/service.sh" "$PKGDIR/service.sh"
 cat > "$PKGDIR/flash.sh" << 'FINISH'
 #!/system/bin/sh
 # Module Info UI
-DEKH "$(PADH "name" "$MODPATH/module.prop")" "h#" 1
-DEKH "🗃️ Powered By Bundle Mods v4+"
+DEKH "$(PADH "name" "$MODPATH/module.prop")" "h#"
+DEKH "🗃️ Powered By Bundle Mods v5"
 DEKH "🌟 Packed By $(PADH "author" "$MODPATH/module.prop")"
 DEKH "⚡ Version - $(PADH "version" "$MODPATH/module.prop")"
-DEKH "🎲 Rooting Implementation - $ROOT"
+DEKH "🎲 Rooting Implementation - $ROOT" 1
 
 # Check for any pre installation script 
 if [ -f "$MODPATH/Pre-Install.sh" ]; then
-  DEKH "📃 Found Pre-Install script in pack. Executing..." 1
+  DEKH "📃 Found Pre-Install script in pack. Executing..."
   source "$MODPATH/Pre-Install.sh"
 elif [ -f "$BAKDIR/Pre-Install.sh" ]; then
-  DEKH "📃 Found Pre-Install script in $BAKDIR. Executing..." 1
+  DEKH "📃 Found Pre-Install script in $BAKDIR. Executing..."
   source "$BAKDIR/Pre-Install.sh"
 fi
 
@@ -67,10 +66,11 @@ fi
 [ "$BAKMODE" = "FOLDER" ] && {
   DEKH "🔎 Looking for Backups" "h"
   BAKDIR="$SDDIR/#Backup"
-  [ ! -d "$BAKDIR" ] && BAKDIR="$(dirname "$(find "$SDDIR" -maxdepth 2 -type f -name '.bundle-mods' | head -n 1)")"; [ "$BAKDIR" = "." ] && unset BAKDIR
+  [ ! -d "$BAKDIR" ] && BAKDIR="$(dirname "$(find "$SDDIR" -maxdepth 2 -type f -name '.bundle-mods' | head -n 1)")"; [ "$BAKDIR" = "." ] && BAKDIR="$SDDIR/#Backup"
   [ -n "$EXTSD" ] && {
     BAKEXT="$EXTSD/#Backup"
-    [ ! -d "$BAKEXT" ] && BAKEXT="$(dirname "$(find "$EXTSD" -maxdepth 2 -type f -name '.bundle-mods' | head -n 1)")"; [ "$BAKEXT" = "." ] && unset BAKEXT
+    [ ! -d "$BAKEXT" ] && BAKEXT="$(dirname "$(find "$EXTSD" -maxdepth 2 -type f -name '.bundle-mods' | head -n 1)")"; [ "$BAKEXT" = "." ] && BAKEXT="$EXTSD/#Backup"
+    [ ! -d "$BAKDIR" ] && [ -d "$BAKEXT" ] && BAKDIR="$BAKEXT"
   }
   
   [ ! -d "$BAKDIR" ] && [ ! -d "$BAKEXT" ] && DEKH "❌ Can't find anything to install" "hx" && exit 1
@@ -82,14 +82,14 @@ fi
     OPT; [ $? -eq 1 ] && {
       BAKDIR="$BAKEXT"
     }
-    true
-  } || [ -d "$BAKEXT" ] && BAKDIR="$BAKEXT"
+  }
   
   # Update Vars for Backup Mode Folder
   PKGMOD="$BAKDIR/MODULES"
   PKGAPPS="$BAKDIR/APPS"
   MODDATA="$PKGMOD/DATA"
 }
+[ ! -f "$ADBDIR/.bundle-ex" ] && NEWUSER=1
 
 # Installation Type Quick or Selective
 DEKH "⏬ Select Installation Type?" "h"
@@ -110,15 +110,16 @@ INSTALL
 
 # Check for any post installation script 
 if [ -f "$MODPATH/Post-Install.sh" ]; then
-  DEKH "📃 Found Post-Install script in pack. Executing..." 1
+  DEKH "📃 Found Post-Install script in pack. Executing..."
   source "$MODPATH/Post-Install.sh"
 elif [ -f "$BAKDIR/Post-Install.sh" ]; then
-  DEKH "📃 Found Post-Install script in $BAKDIR. Executing..." 1
+  DEKH "📃 Found Post-Install script in $BAKDIR. Executing..."
   source "$BAKDIR/Post-Install.sh"
 fi
 
+[ "$NEWUSER" -eq 1 ] && {
 # Prompt to join Channel
-DEKH "🔗 @BuildBytes is quietly building things worth exploring. Want to be there early?" "h#" 1
+DEKH "🔗 @BuildBytes is quietly building things worth exploring. Want to be there early?" "h#"
 DEKH "🔊 Vol+ = Yes, I’m in. early, curious, and ahead\n🔉 Vol- = No, I’ll scroll past and miss it\n"
 OPT
 if [ $? -ne 1 ]; then
@@ -126,12 +127,14 @@ if [ $? -ne 1 ]; then
 else
   DEKH "🫥 You passed.\nNo noise, no regret, just a silent skip over something built with intent.\nI’ll stay here, quietly excellent, waiting for those who notice before it’s popular."
 fi
-DEKH "📦 Everything from Pack Installed Successfully" "h"
+}
 wait
+DEKH "📦 Everything from Pack Installed Successfully" "h" 1
 
 # Remove Bundle-Pack
 (
 sleep 0.2
+touch "$ADBDIR/.bundle-ex"
 rm -rf "$MODPATH" "$MODDIR/bundle-mods" 
 )&
 FINISH
@@ -192,7 +195,7 @@ BUNDLE_FUNCS() {
 
 while true; do
   [ "${#BUNDLE_KEYS[@]}" -eq 1 ] && [ "${BUNDLE_KEYS[0]}" = "Finish Bundling" ] && break
-  DEKH "📦 Select what to bundle:" "h" 1
+  DEKH "📦 Select what to bundle:" "h"
   keymap=()
   for i in "${!BUNDLE_KEYS[@]}"; do
     label="${BUNDLE_KEYS[i]}"
@@ -237,7 +240,7 @@ SKIPPRCN=$((SKPCNT * 100 / TOTALCNT))
 [ "$SKIPPRCN" -ge 90 ] && DEKH "😔 Looks like you have Commitment issues." "h"
 
 # Customize Module Name and Author
-DEKH "🎨 Do you want to change the bundle/pack name and author?" "h" 1
+DEKH "🎨 Do you want to change the bundle/pack name and author?" "h"
 DEKH "🔊 Vol+ = Yes\n🔉 Vol- = No" 0.5
 OPT
 if [ $? -eq 0 ]; then
@@ -250,13 +253,13 @@ if [ $? -eq 0 ]; then
   CUSAUTHOR="$(CRENAME "$RNMDIR" "$AUTHORPH")" || CUSAUTHOR="Unknown"
   DEKH "✅ Pack Author set to: $CUSAUTHOR"
   touch "$RNMDIR/$VERSIONPH"
-  CUSVERSION="$(CRENAME "$RNMDIR" "$VERSIONPH")" || CUSVERSION="v4+ ($NOW)"
+  CUSVERSION="$(CRENAME "$RNMDIR" "$VERSIONPH")" || CUSVERSION="v5 ($NOW)"
   DEKH "✅ Pack Version set to: $CUSVERSION"
   CFM; rm -rf "$RNMDIR"; sleep 1
 else
   CUSNAME="🧰 Modules or Apps Package - $(getprop ro.product.model)"
   CUSAUTHOR="Unknown"
-  CUSVERSION="v4+ ($NOW)"
+  CUSVERSION="v5 ($NOW)"
   DEKH "✅ Using Default Values: \n$CUSNAME [$CUSVERSION] by $CUSAUTHOR"
 fi
 
@@ -269,6 +272,7 @@ SET version "$CUSVERSION" "$PKGDIR/module.prop"
 # Bundle Pack
 DEKH "✅ Finalizing your Bundle Pack." "h"
 if [ "$BAKMODE" = "FOLDER" ]; then
+  rm -f "$BAKDIR/"*.zip
   PACKFILE="$SDDIR/#Backup/$CUSNAME.zip"
   cmp=""
 else
@@ -278,7 +282,8 @@ fi
 cd "$PKGDIR"
 $SNORLAX $cmp -qr "$PACKFILE" .
 
-DEKH "🔗 @BuildBytes is quietly building things worth exploring. Want to be there early?" "h#" 1
+[ "$NEWUSER" -eq 1 ] && {
+DEKH "🔗 @BuildBytes is quietly building things worth exploring. Want to be there early?" "h#"
 DEKH "🔊 Vol+ = Yes, I’m in. early, curious, and ahead\n🔉 Vol- = No, I’ll scroll past and miss it\n"
 OPT
 if [ $? -ne 1 ]; then
@@ -286,14 +291,13 @@ if [ $? -ne 1 ]; then
 else
   DEKH "🫥 You passed.\nNo noise, no regret, just a silent skip over something built with intent.\nI’ll stay here, quietly excellent, waiting for those who notice before it’s popular."
 fi
+}
 
 # Finalised and Cleanup
 DEKH "📦 Your Bundled Pack is Ready" "h"
-DEKH "📊 Summary:" "h"
-DEKH "✅ Mods/Apps Added: $ADDCNT (~$ADDPRCN%)"
-DEKH "⏩ Mods/Apps Skipped: $SKPCNT (~$SKIPPRCN%)"
-DEKH "👇 FLASH BELOW ZIP TO RESTORE 👇" "h#" 1
-DEKH "📁 - $PACKFILE\n"
+DEKH "✅ Mods/Apps Added: $ADDCNT"
+DEKH "👇 FLASH BELOW ZIP TO RESTORE 👇" "h#"
+DEKH "📁 - $PACKFILE\n" 1
 
 # Remove Bundle-Mods
 (
